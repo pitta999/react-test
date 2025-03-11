@@ -1,6 +1,7 @@
 import { initializeApp, FirebaseApp, getApp } from "firebase/app";
 import "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage"; // Storage 추가
 
 export let app: FirebaseApp;
 
@@ -25,5 +26,8 @@ const firebase = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
+
+// Initialize Firebase Storage
+export const storage = getStorage(app); // Storage 초기화 및 내보내기
 
 export default firebase;
