@@ -99,20 +99,6 @@ export default function UserDetail() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">사용자 상세 정보</h2>
-        <div className="flex space-x-2">
-          <Link
-            to={`/users/${userId}/edit`}
-            className="text-primary-600 hover:text-primary-900"
-          >
-            수정
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="text-red-600 hover:text-red-900"
-          >
-            삭제
-          </button>
-        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">

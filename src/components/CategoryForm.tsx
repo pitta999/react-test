@@ -131,15 +131,6 @@ export default function CategoryForm() {
           <h1 className="text-2xl font-bold">
             {isEditMode ? "카테고리 수정" : "카테고리 등록"}
           </h1>
-          {isEditMode && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="text-red-600 hover:text-red-900"
-            >
-              삭제
-            </button>
-          )}
         </div>
         
         <div className="mb-6">
@@ -197,6 +188,16 @@ export default function CategoryForm() {
           >
             {isLoading ? "처리 중..." : isEditMode ? "수정하기" : "등록하기"}
           </button>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              title="삭제"
+            >
+              🗑️
+            </button>
+          )}
         </div>
       </form>
     </div>
