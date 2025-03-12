@@ -165,110 +165,166 @@ export default function UserForm() {
     }
   };
 
+  // 사용자 삭제 핸들러
+  const handleDelete = async () => {
+    if (!userId) return;
+
+    const confirmed = window.confirm("이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      await deleteDoc(doc(db, "users", userId));
+      toast.success("사용자가 삭제되었습니다.");
+      navigate("/users");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("사용자 삭제 중 오류가 발생했습니다.");
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
-    return <div className="loader">로딩 중...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
-    <form onSubmit={onSubmit} className="form form--lg">
-      <h1 className="form__title">{isEditMode ? "사용자 정보 수정" : "사용자 등록"}</h1>
-      <div className="form__block">
-        <label htmlFor="email">이메일</label>
-        <input 
-          type="email" 
-          name="email" 
-          id="email" 
-          required 
-          onChange={(e) => setEmail(e.target.value)} 
-          value={email}
-          disabled={isEditMode} // 수정 모드에서는 이메일 변경 불가
-        />
-      </div>
-      
-      {!isEditMode && (
-        <>
-          <div className="form__block">
-            <label htmlFor="password">비밀번호</label>
-            <input 
-              type="password" 
-              name="password" 
-              id="password" 
-              required={!isEditMode}
-              onChange={(e) => setPassword(e.target.value)} 
-              value={password} 
-            />
-          </div>
-          <div className="form__block">
-            <label htmlFor="password_confirm">비밀번호 확인</label>
-            <input 
-              type="password" 
-              name="password_confirm" 
-              id="password_confirm" 
-              required={!isEditMode}
-              onChange={(e) => setPasswordConfirm(e.target.value)} 
-              value={passwordConfirm} 
-            />
-          </div>
-        </>
-      )}
-      
-      <div className="form__block">
-        <label htmlFor="address">주소</label>
-        <input 
-          type="text" 
-          name="address" 
-          id="address" 
-          required 
-          onChange={(e) => setAddress(e.target.value)} 
-          value={address} 
-        />
-      </div>
-      <div className="form__block">
-        <label htmlFor="phoneNumber">전화번호</label>
-        <input 
-          type="tel" 
-          name="phoneNumber" 
-          id="phoneNumber" 
-          required 
-          placeholder="01012345678" 
-          onChange={(e) => setPhoneNumber(e.target.value)} 
-          value={phoneNumber} 
-        />
-      </div>
-      <div className="form__block">
-        <label htmlFor="membershipLevel">회원 등급</label>
-        <select 
-          name="membershipLevel" 
-          id="membershipLevel" 
-          onChange={(e) => setMembershipLevel(e.target.value as MembershipLevelType)} 
-          value={membershipLevel}
-        >
-          {MEMBERSHIP_LEVELS.map((level) => (
-            <option value={level} key={level}>
-              {level}
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      {error && error?.length > 0 && (
-        <div className="form__block">
-          <div className="form__error">{error}</div>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <form onSubmit={onSubmit} className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? "사용자 정보 수정" : "사용자 등록"}
+          </h1>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-red-600 hover:text-red-900"
+            >
+              삭제
+            </button>
+          )}
         </div>
-      )}
-      
-      <div className="form__block">
-        <Link to="/users" className="form__link">사용자 목록으로 돌아가기</Link>
-      </div>
-      
-      <div className="form__block">
-        <input 
-          type="submit" 
-          value={isEditMode ? "정보 수정" : "사용자 등록"} 
-          className="form__btn--submit" 
-          disabled={error?.length > 0 || isLoading} 
-        />
-      </div>
-    </form>
+
+        <div className="mb-6">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            이메일
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isEditMode}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+            required
+          />
+        </div>
+
+        {!isEditMode && (
+          <>
+            <div className="mb-6">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                비밀번호
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+            <div className="mb-6">
+              <label htmlFor="password_confirm" className="block text-sm font-medium text-gray-700 mb-2">
+                비밀번호 확인
+              </label>
+              <input
+                type="password"
+                id="password_confirm"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+          </>
+        )}
+
+        <div className="mb-6">
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+            주소
+          </label>
+          <input
+            type="text"
+            id="address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+            전화번호
+          </label>
+          <input
+            type="tel"
+            id="phoneNumber"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="01012345678"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="membershipLevel" className="block text-sm font-medium text-gray-700 mb-2">
+            회원 등급
+          </label>
+          <select
+            id="membershipLevel"
+            value={membershipLevel}
+            onChange={(e) => setMembershipLevel(e.target.value as MembershipLevelType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {MEMBERSHIP_LEVELS.map((level) => (
+              <option value={level} key={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <div className="mb-6">
+            <p className="text-red-500 text-sm">{error}</p>
+          </div>
+        )}
+
+        <div className="flex gap-4">
+          <Link
+            to="/users"
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center"
+          >
+            취소
+          </Link>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "처리 중..." : isEditMode ? "수정하기" : "등록하기"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

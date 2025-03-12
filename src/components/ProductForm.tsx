@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { db, storage } from "firebaseApp";
-import { doc, getDoc, setDoc, updateDoc, getDocs, collection } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
@@ -226,7 +226,7 @@ export default function ProductForm() {
       if (isEditMode && productId) {
         await updateDoc(doc(db, "products", productId), productData);
         toast.success("상품 정보가 수정되었습니다.");
-        navigate(`/products/${productId}`);
+        navigate("/products/manage");
       } else {
         const productRef = doc(db, "products", uuidv4());
         await setDoc(productRef, {
@@ -236,7 +236,7 @@ export default function ProductForm() {
           createdBy: user?.email,
         });
         toast.success("상품이 등록되었습니다.");
-        navigate("/products");
+        navigate("/products/manage");
       }
     } catch (error: any) {
       console.error("Error saving product:", error);
@@ -246,117 +246,188 @@ export default function ProductForm() {
     }
   };
 
+  // 상품 삭제 핸들러
+  const handleDelete = async () => {
+    if (!productId) return;
+
+    const confirmed = window.confirm("이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      // 이미지가 있다면 Storage에서 삭제
+      if (imageUrl) {
+        try {
+          const imageRef = ref(storage, imageUrl);
+          await deleteObject(imageRef);
+        } catch (error) {
+          console.error("Error deleting image:", error);
+        }
+      }
+
+      await deleteDoc(doc(db, "products", productId));
+      toast.success("상품이 삭제되었습니다.");
+      navigate("/products/manage");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("상품 삭제 중 오류가 발생했습니다.");
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
-    return <div className="loader">로딩 중...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
-    <form onSubmit={onSubmit} className="form form--lg">
-      <h1 className="form__title">{isEditMode ? "상품 수정" : "상품 등록"}</h1>
-      
-      <div className="form__block">
-        <label htmlFor="name">상품명</label>
-        <input
-          type="text"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="상품명을 입력하세요"
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="price">가격</label>
-        <input
-          type="number"
-          id="price"
-          value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
-          placeholder="가격을 입력하세요"
-          min="0"
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="category">카테고리</label>
-        <select
-          id="category"
-          value={selectedCategoryId}
-          onChange={(e) => setSelectedCategoryId(e.target.value)}
-          required
-        >
-          <option value="">카테고리를 선택하세요</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <div className="form__help">
-          <Link to="/categories" className="link">
-            카테고리 관리
-          </Link>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <form onSubmit={onSubmit} className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? "상품 수정" : "상품 등록"}
+          </h1>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-red-600 hover:text-red-900"
+            >
+              삭제
+            </button>
+          )}
         </div>
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="stock">재고 수량</label>
-        <input
-          type="number"
-          id="stock"
-          value={stock}
-          onChange={(e) => setStock(Number(e.target.value))}
-          placeholder="재고 수량을 입력하세요"
-          min="0"
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="description">상품 설명</label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="상품에 대한 상세 설명을 입력하세요"
-          rows={5}
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="image">상품 이미지</label>
-        <input
-          type="file"
-          id="image"
-          accept="image/*"
-          onChange={handleImageChange}
-        />
-        {previewUrl && (
-          <div className="image-preview">
-            <img src={previewUrl} alt="상품 이미지 미리보기" />
+
+        <div className="mb-6">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            상품명
+          </label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="상품명을 입력하세요"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+            가격
+          </label>
+          <input
+            type="number"
+            id="price"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            placeholder="가격을 입력하세요"
+            min="0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+            카테고리
+          </label>
+          <select
+            id="category"
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="">카테고리를 선택하세요</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2">
+            <Link to="/categories" className="text-sm text-primary-600 hover:text-primary-900">
+              카테고리 관리
+            </Link>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
+            재고 수량
+          </label>
+          <input
+            type="number"
+            id="stock"
+            value={stock}
+            onChange={(e) => setStock(Number(e.target.value))}
+            placeholder="재고 수량을 입력하세요"
+            min="0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            상품 설명
+          </label>
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="상품에 대한 상세 설명을 입력하세요"
+            rows={5}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
+            상품 이미지
+          </label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full"
+          />
+          {previewUrl && (
+            <div className="mt-4">
+              <img src={previewUrl} alt="상품 이미지 미리보기" className="max-w-xs rounded-md" />
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="mb-6">
+            <p className="text-red-500 text-sm">{error}</p>
           </div>
         )}
-      </div>
-      
-      {error && (
-        <div className="form__block">
-          <div className="form__error">{error}</div>
-        </div>
-      )}
-      
-      <div className="form__block">
-        <div className="form__buttons">
-          <Link to="/products" className="form__btn--cancel">
+
+        <div className="flex gap-4">
+          <Link
+            to="/products/manage"
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center"
+          >
             취소
           </Link>
-          <button type="submit" className="form__btn--submit" disabled={isLoading}>
-            {isEditMode ? "수정하기" : "등록하기"}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "처리 중..." : isEditMode ? "수정하기" : "등록하기"}
           </button>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

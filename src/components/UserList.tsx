@@ -50,54 +50,94 @@ export default function UserList() {
   }, []);
 
   if (isLoading) {
-    return <div className="loader">로딩 중...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="container">
-      <div className="user-list-header">
-        <h1>사용자 관리</h1>
-        <Link to="/users/new" className="user-list__btn--add">
-          + 새 사용자 등록
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">사용자 관리</h2>
+        <Link
+          to="/users/new"
+          className="text-primary-600 hover:text-primary-900 flex items-center"
+        >
+          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          새 사용자 등록
         </Link>
       </div>
 
-      {users.length === 0 ? (
-        <div className="user-list__empty">
-          <p>등록된 사용자가 없습니다.</p>
-        </div>
-      ) : (
-        <table className="user-list-table">
-          <thead>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th>이메일</th>
-              <th>전화번호</th>
-              <th>회원 등급</th>
-              <th>가입일</th>
-              <th>관리</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                이메일
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                전화번호
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                회원 등급
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                가입일
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                작업
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.uid}>
-                <td>{user.email}</td>
-                <td>{user.phoneNumber}</td>
-                <td>
-                  <span className={`badge badge--${user.membershipLevel}`}>
+              <tr key={user.uid} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {user.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {user.phoneNumber}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
                     {user.membershipLevel}
                   </span>
                 </td>
-                <td>{user.createdAt}</td>
-                <td>
-                  <Link to={`/users/${user.uid}`} className="user-list__btn--view">
-                    보기
-                  </Link>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {user.createdAt}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div className="flex space-x-2">
+                    <Link
+                      to={`/users/${user.uid}`}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      보기
+                    </Link>
+                    <Link
+                      to={`/users/${user.uid}/edit`}
+                      className="text-primary-600 hover:text-primary-900"
+                    >
+                      수정
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                  등록된 사용자가 없습니다.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 }

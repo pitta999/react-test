@@ -14,28 +14,29 @@ export default function Header() {
           </Link>
           
           <div className="flex items-center space-x-6">
-            <Link to="/posts" className="text-gray-600 hover:text-gray-900">
-              게시글
-            </Link>
-            <Link to="/products" className="text-gray-600 hover:text-gray-900">
-              상품
-            </Link>
+            
             
             {user ? (
               <>
                 {isAdmin && (
                   <>
                     <Link to="/users" className="text-red-600 hover:text-red-700 font-medium">
-                      사용자 관리
+                      사용자
                     </Link>
                     <Link to="/categories" className="text-red-600 hover:text-red-700 font-medium">
-                      카테고리 관리
+                      카테고리
                     </Link>
                     <Link to="/products/manage" className="text-red-600 hover:text-red-700 font-medium">
-                      상품 관리
+                      상품
                     </Link>
                   </>
                 )}
+                <Link to="/posts" className="text-gray-600 hover:text-gray-900">
+                  게시글
+                </Link>
+                <Link to="/products" className="text-gray-600 hover:text-gray-900">
+                  상품
+                </Link>
                 <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                   프로필
                 </Link>

@@ -76,8 +76,11 @@ export default function ProductManage() {
         <h2 className="text-2xl font-bold text-gray-900">상품 관리</h2>
         <Link
           to="/products/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          className="text-primary-600 hover:text-primary-900 flex items-center"
         >
+          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
           새 상품 등록
         </Link>
       </div>
@@ -127,17 +130,17 @@ export default function ProductManage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex space-x-2">
                     <Link
+                      to={`/products/${product.id}`}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      보기
+                    </Link>
+                    <Link
                       to={`/products/${product.id}/edit`}
                       className="text-primary-600 hover:text-primary-900"
                     >
                       수정
                     </Link>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      삭제
-                    </button>
                   </div>
                 </td>
               </tr>

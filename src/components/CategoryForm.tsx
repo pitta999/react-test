@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { db } from "firebaseApp";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
@@ -97,6 +97,25 @@ export default function CategoryForm() {
     }
   };
 
+  // 카테고리 삭제 핸들러
+  const handleDelete = async () => {
+    if (!categoryId) return;
+
+    const confirmed = window.confirm("이 카테고리를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      await deleteDoc(doc(db, "productCategories", categoryId));
+      toast.success("카테고리가 삭제되었습니다.");
+      navigate("/categories");
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("카테고리 삭제 중 오류가 발생했습니다.");
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -108,9 +127,20 @@ export default function CategoryForm() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <form onSubmit={onSubmit} className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-center mb-8">
-          {isEditMode ? "카테고리 수정" : "카테고리 등록"}
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? "카테고리 수정" : "카테고리 등록"}
+          </h1>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-red-600 hover:text-red-900"
+            >
+              삭제
+            </button>
+          )}
+        </div>
         
         <div className="mb-6">
           <label 
