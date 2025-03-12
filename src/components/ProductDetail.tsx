@@ -5,14 +5,14 @@ import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { ProductCategoryType } from "./ProductForm";
 
 interface ProductDetailType {
   id: string;
   name: string;
   price: number;
   description: string;
-  category: ProductCategoryType;
+  categoryId: string;
+  categoryName: string;
   stock: number;
   imageUrl: string;
   createdAt: string;
@@ -141,7 +141,7 @@ export default function ProductDetail() {
         <div className="product-detail__info">
           <div className="product-detail__item">
             <span className="product-detail__label">카테고리</span>
-            <span className="product-detail__value badge">{product.category}</span>
+            <span className="product-detail__value badge">{product.categoryName}</span>
           </div>
           
           <div className="product-detail__item">
