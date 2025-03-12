@@ -14,6 +14,10 @@ import ProductList from "pages/products";
 import ProductDetail from "pages/products/detail";
 import ProductNew from "pages/products/new";
 import ProductEdit from "pages/products/edit";
+import ProductManage from "pages/products/manage";
+import CategoriesPage from "pages/categories";
+import NewCategoryPage from "pages/categories/new";
+import EditCategoryPage from "pages/categories/edit/[id]";
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -57,6 +61,10 @@ export default function Router({ isAuthenticated, isAdmin }: RouterProps) {
             
             {/* 어드민 전용 상품 관리 라우트 */}
             <Route 
+              path="/products/manage" 
+              element={isAdmin ? <ProductManage /> : <Navigate replace to="/" />} 
+            />
+            <Route 
               path="/products/new" 
               element={isAdmin ? <ProductNew /> : <Navigate replace to="/" />} 
             />
@@ -64,6 +72,10 @@ export default function Router({ isAuthenticated, isAdmin }: RouterProps) {
               path="/products/:productId/edit" 
               element={isAdmin ? <ProductEdit /> : <Navigate replace to="/" />} 
             />
+            
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/categories/new" element={<NewCategoryPage />} />
+            <Route path="/categories/edit/:categoryId" element={<EditCategoryPage />} />
             
             <Route path="*" element={<Navigate replace to="/" />} />
           </>

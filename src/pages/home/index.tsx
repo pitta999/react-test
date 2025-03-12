@@ -1,6 +1,7 @@
 import Header from "components/Header";
 import Footer from "components/Footer";
-import PostList from "components/PostList";
+
+import ProductList from "components/ProductList";
 import Carousel from "components/Carousel";
 
 export default function Home() {
@@ -8,7 +9,7 @@ export default function Home() {
     <>
       <Header />
       {/* <Carousel /> */}
-      <PostList />
+      <ProductList />
       <Footer />
     </>
   );

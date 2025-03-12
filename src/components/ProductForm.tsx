@@ -1,11 +1,12 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { db, storage } from "firebaseApp";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, getDocs, collection } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
+import { ProductCategory } from "types/product";
 
 // 상품 카테고리 타입 정의
 export type ProductCategoryType = "clothing" | "electronics" | "furniture" | "books" | "food" | "other";
@@ -25,13 +26,33 @@ export default function ProductForm() {
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
   const [description, setDescription] = useState<string>("");
-  const [category, setCategory] = useState<ProductCategoryType>("other");
   const [stock, setStock] = useState<number>(0);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  // 카테고리 목록 불러오기
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "productCategories"));
+        const categoryList: ProductCategory[] = [];
+        querySnapshot.forEach((doc) => {
+          categoryList.push(doc.data() as ProductCategory);
+        });
+        setCategories(categoryList.sort((a, b) => a.name.localeCompare(b.name)));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("카테고리 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // 수정 모드일 경우 상품 정보 불러오기
   useEffect(() => {
@@ -45,7 +66,7 @@ export default function ProductForm() {
             setName(productData.name || "");
             setPrice(productData.price || 0);
             setDescription(productData.description || "");
-            setCategory(productData.category || "other");
+            setSelectedCategoryId(productData.categoryId || "");
             setStock(productData.stock || 0);
             setImageUrl(productData.imageUrl || "");
             setPreviewUrl(productData.imageUrl || "");
@@ -103,6 +124,11 @@ export default function ProductForm() {
     
     if (price <= 0) {
       setError("가격은 0보다 커야 합니다.");
+      return false;
+    }
+    
+    if (!selectedCategoryId) {
+      setError("카테고리를 선택해주세요.");
       return false;
     }
     
@@ -165,11 +191,9 @@ export default function ProductForm() {
     setIsLoading(true);
     
     try {
-      // 이미지 업로드
       let productImageUrl = imageUrl;
       
       if (imageFile) {
-        // 수정 모드에서 이미지가 변경된 경우, 기존 이미지 삭제
         if (isEditMode && imageUrl) {
           try {
             const oldImageRef = ref(storage, imageUrl);
@@ -181,13 +205,18 @@ export default function ProductForm() {
         
         productImageUrl = await uploadImage();
       }
+
+      const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
+      if (!selectedCategory) {
+        throw new Error("선택한 카테고리를 찾을 수 없습니다.");
+      }
       
-      // 상품 데이터 객체
       const productData = {
         name,
         price: Number(price),
         description,
-        category,
+        categoryId: selectedCategoryId,
+        categoryName: selectedCategory.name,
         stock: Number(stock),
         imageUrl: productImageUrl,
         updatedAt: new Date().toLocaleString("ko-KR"),
@@ -195,12 +224,10 @@ export default function ProductForm() {
       };
       
       if (isEditMode && productId) {
-        // 기존 상품 업데이트
         await updateDoc(doc(db, "products", productId), productData);
         toast.success("상품 정보가 수정되었습니다.");
         navigate(`/products/${productId}`);
       } else {
-        // 새 상품 등록
         const productRef = doc(db, "products", uuidv4());
         await setDoc(productRef, {
           ...productData,
@@ -256,16 +283,22 @@ export default function ProductForm() {
         <label htmlFor="category">카테고리</label>
         <select
           id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as ProductCategoryType)}
+          value={selectedCategoryId}
+          onChange={(e) => setSelectedCategoryId(e.target.value)}
           required
         >
-          {PRODUCT_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          <option value="">카테고리를 선택하세요</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
             </option>
           ))}
         </select>
+        <div className="form__help">
+          <Link to="/categories" className="link">
+            카테고리 관리
+          </Link>
+        </div>
       </div>
       
       <div className="form__block">
