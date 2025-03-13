@@ -414,6 +414,11 @@ export default function UserForm() {
                   ))}
                 </select>
               </div>
+              <div>
+                <Link to="/users/categories" className="text-sm text-primary-600 hover:text-primary-900">
+                  등급 관리
+                </Link>
+              </div>
             </div>
           </div>
 

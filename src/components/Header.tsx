@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { useContext } from "react";
 import AuthContext from "context/AuthContext";
+import { useCart } from "context/CartContext";
 
 export default function Header() {
   const { user, isAdmin } = useContext(AuthContext);
+  const { totalItems } = useCart();
+
+  console.log("Header - isAdmin:", isAdmin, "user:", user); // 디버깅용
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -20,10 +24,16 @@ export default function Header() {
               <>
                 {isAdmin && (
                   <>
-                    <Link to="/users" className="text-red-600 hover:text-red-700 font-medium">
+                    <Link
+                      to="/users"
+                      className="text-red-600 hover:text-red-700 font-medium"
+                    >
                       사용자
                     </Link>
-                    <Link to="/products/manage" className="text-red-600 hover:text-red-700 font-medium">
+                    <Link
+                      to="/products/manage"
+                      className="text-red-600 hover:text-red-700 font-medium"
+                    >
                       상품
                     </Link>
                   </>
@@ -33,6 +43,14 @@ export default function Header() {
                 </Link>
                 <Link to="/products" className="text-gray-600 hover:text-gray-900">
                   상품
+                </Link>
+                <Link to="/cart" className="text-gray-600 hover:text-gray-900 relative">
+                  장바구니
+                  {totalItems > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {totalItems}
+                    </span>
+                  )}
                 </Link>
                 <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                   프로필

@@ -127,13 +127,6 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
-          
-          {product.stock > 0 && (
-            <div className="product-detail__buy">
-              <button className="product-detail__btn--cart">장바구니에 담기</button>
-              <button className="product-detail__btn--buy">바로 구매하기</button>
-            </div>
-          )}
         </div>
       </div>
       

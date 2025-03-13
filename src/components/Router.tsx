@@ -1,4 +1,6 @@
 import { Route, Routes, Navigate } from "react-router-dom";
+import { useContext } from "react";
+import AuthContext from "context/AuthContext";
 import Home from "pages/home";
 import PostList from "pages/posts";
 import PostDetail from "pages/posts/detail";
@@ -21,13 +23,15 @@ import EditProductCategoryPage from "pages/products/categories/edit/[id]";
 import UserCategoriesPage from "pages/users/categories";
 import NewUserCategoryPage from "pages/users/categories/new";
 import EditUserCategoryPage from "pages/users/categories/edit/[id]";
+import CartPage from "pages/cart";
 
 interface RouterProps {
   isAuthenticated: boolean;
-  isAdmin: boolean;
 }
 
-export default function Router({ isAuthenticated, isAdmin }: RouterProps) {
+export default function Router({ isAuthenticated }: RouterProps) {
+  const { isAdmin } = useContext(AuthContext);
+  
   return (
     <>
       <Routes>
@@ -42,6 +46,7 @@ export default function Router({ isAuthenticated, isAdmin }: RouterProps) {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:productId" element={<ProductDetail />} />
+            <Route path="/cart" element={<CartPage />} />
             
             {/* 어드민 전용 사용자 관리 라우트 */}
             <Route 

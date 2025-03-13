@@ -4,6 +4,8 @@ import { db } from "firebaseApp";
 import { collection, getDocs, query, orderBy, where, doc, getDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
+import { useCart } from "context/CartContext";
+import CartSidebar from "./CartSidebar";
 
 interface ProductType {
   id: string;
@@ -38,6 +40,7 @@ export default function ProductList() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userData, setUserData] = useState<UserData | null>(null);
   const { user, isAdmin } = useContext(AuthContext);
+  const { addItem } = useCart();
 
   // 사용자 정보 불러오기
   useEffect(() => {
@@ -114,6 +117,19 @@ export default function ProductList() {
     return userDiscount?.price || null;
   };
 
+  const handleAddToCart = (product: ProductType) => {
+    const discountPrice = getDiscountPrice(product);
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      discountPrice: discountPrice || undefined,
+      quantity: 1,
+      imageUrl: product.imageUrl,
+      categoryName: product.categoryName
+    });
+  };
+
   // 섹션 렌더링 함수
   const renderProductSection = (title: string, products: ProductType[]) => (
     <div className="mb-8">
@@ -185,7 +201,11 @@ export default function ProductList() {
                     >
                       상세보기
                     </Link>
-                    <button className="text-primary-600 hover:text-primary-900">
+                    <button 
+                      onClick={() => handleAddToCart(product)}
+                      className="text-primary-600 hover:text-primary-900"
+                      disabled={product.stockStatus !== 'ok'}
+                    >
                       주문하기
                     </button>
                   </td>
@@ -214,29 +234,24 @@ export default function ProductList() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">상품 목록</h1>
-        <div className="flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="상품 검색..."
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-          {isAdmin && (
-            <Link
-              to="/products/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-            >
-              상품 등록
-            </Link>
-          )}
+    <>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">상품 목록</h1>
+          <div className="flex items-center">
+            <input
+              type="text"
+              placeholder="상품 검색..."
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
         </div>
-      </div>
 
-      {renderProductSection("DashCam", dashcamProducts)}
-      {renderProductSection("Accessory", accessoryProducts)}
-      {renderProductSection("Companion", companionProducts)}
-    </div>
+        {renderProductSection("DashCam", dashcamProducts)}
+        {renderProductSection("Accessory", accessoryProducts)}
+        {renderProductSection("Companion", companionProducts)}
+      </div>
+      <CartSidebar />
+    </>
   );
 }
