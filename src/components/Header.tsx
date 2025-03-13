@@ -23,9 +23,6 @@ export default function Header() {
                     <Link to="/users" className="text-red-600 hover:text-red-700 font-medium">
                       사용자
                     </Link>
-                    <Link to="/categories" className="text-red-600 hover:text-red-700 font-medium">
-                      카테고리
-                    </Link>
                     <Link to="/products/manage" className="text-red-600 hover:text-red-700 font-medium">
                       상품
                     </Link>

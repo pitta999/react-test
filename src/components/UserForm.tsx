@@ -1,30 +1,86 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { app, db } from "firebaseApp";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser } from "firebase/auth";
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs, collection } from "firebase/firestore";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
+import { UserCategory } from "./UserCategoryForm";
 
-export type MembershipLevelType = "class1" | "class2" | "class3" | "class4" | "admin";
-export const MEMBERSHIP_LEVELS: MembershipLevelType[] = ["class1", "class2", "class3", "class4", "admin"];
+interface UserFormData {
+  email: string;
+  fullCompanyName: string;
+  tradingName: string;
+  companyAddress: string;
+  personInCharge: {
+    name: string;
+    title: string;
+  };
+  telNo: string;
+  mobNo: string;
+  webAddress: string;
+  businessType: 'B2B' | 'B2C' | 'Other';
+  installationService: 'Yes' | 'No';
+  salesProducts: string;
+  tradeAmount: string;
+  preferentialModel: string;
+  estimatedPurchase: string;
+  categoryId: string;
+  categoryName: string;
+  categoryLevel: number;
+}
 
 export default function UserForm() {
-  const { userId } = useParams(); // 수정 모드일 경우 userId가 있음
+  const { userId } = useParams();
   const isEditMode = !!userId;
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const auth = getAuth(app);
 
   const [error, setError] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [passwordConfirm, setPasswordConfirm] = useState<string>("");
-  const [address, setAddress] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [membershipLevel, setMembershipLevel] = useState<MembershipLevelType>("class1");
+  const [fullCompanyName, setFullCompanyName] = useState<string>("");
+  const [tradingName, setTradingName] = useState<string>("");
+  const [companyAddress, setCompanyAddress] = useState<string>("");
+  const [personInChargeName, setPersonInChargeName] = useState<string>("");
+  const [personInChargeTitle, setPersonInChargeTitle] = useState<string>("");
+  const [telNo, setTelNo] = useState<string>("");
+  const [mobNo, setMobNo] = useState<string>("");
+  const [webAddress, setWebAddress] = useState<string>("");
+  const [businessType, setBusinessType] = useState<'B2B' | 'B2C' | 'Other'>('B2B');
+  const [installationService, setInstallationService] = useState<'Yes' | 'No'>('Yes');
+  const [salesProducts, setSalesProducts] = useState<string>("");
+  const [tradeAmount, setTradeAmount] = useState<string>("");
+  const [preferentialModel, setPreferentialModel] = useState<string>("");
+  const [estimatedPurchase, setEstimatedPurchase] = useState<string>("");
+  const [categories, setCategories] = useState<UserCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const auth = getAuth(app);
+
+  // 회원 등급 목록 불러오기
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "userCategories"));
+        const categoryList: UserCategory[] = [];
+        querySnapshot.forEach((doc) => {
+          categoryList.push(doc.data() as UserCategory);
+        });
+        const sortedCategories = categoryList.sort((a, b) => a.level - b.level);
+        setCategories(sortedCategories);
+        if (sortedCategories.length > 0 && !selectedCategoryId) {
+          setSelectedCategoryId(sortedCategories[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("회원 등급 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+    };
+
+    fetchCategories();
+  }, [selectedCategoryId]);
 
   // 수정 모드일 경우 사용자 정보 불러오기
   useEffect(() => {
@@ -34,11 +90,23 @@ export default function UserForm() {
         try {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
-            const userData = userDoc.data();
+            const userData = userDoc.data() as UserFormData;
             setEmail(userData.email || "");
-            setAddress(userData.address || "");
-            setPhoneNumber(userData.phoneNumber || "");
-            setMembershipLevel(userData.membershipLevel || "class1");
+            setFullCompanyName(userData.fullCompanyName || "");
+            setTradingName(userData.tradingName || "");
+            setCompanyAddress(userData.companyAddress || "");
+            setPersonInChargeName(userData.personInCharge.name || "");
+            setPersonInChargeTitle(userData.personInCharge.title || "");
+            setTelNo(userData.telNo || "");
+            setMobNo(userData.mobNo || "");
+            setWebAddress(userData.webAddress || "");
+            setBusinessType(userData.businessType || "B2B");
+            setInstallationService(userData.installationService || "Yes");
+            setSalesProducts(userData.salesProducts || "");
+            setTradeAmount(userData.tradeAmount || "");
+            setPreferentialModel(userData.preferentialModel || "");
+            setEstimatedPurchase(userData.estimatedPurchase || "");
+            setSelectedCategoryId(userData.categoryId || "");
           } else {
             toast.error("사용자 정보를 찾을 수 없습니다.");
             navigate("/users");
@@ -78,8 +146,13 @@ export default function UserForm() {
 
     // 전화번호 형식 검사 (숫자만)
     const phoneRegex = /^[0-9]*$/;
-    if (!phoneNumber.match(phoneRegex)) {
+    if (!telNo.match(phoneRegex) || !mobNo.match(phoneRegex)) {
       setError("전화번호는 숫자만 입력 가능합니다.");
+      return false;
+    }
+
+    if (!selectedCategoryId) {
+      setError("회원 등급을 선택해주세요.");
       return false;
     }
 
@@ -98,6 +171,12 @@ export default function UserForm() {
         return;
       }
 
+      // 선택된 카테고리 정보 가져오기
+      const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
+      if (!selectedCategory) {
+        throw new Error("선택한 회원 등급을 찾을 수 없습니다.");
+      }
+
       // 새 사용자 생성
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
@@ -105,16 +184,32 @@ export default function UserForm() {
       // Firestore에 추가 사용자 정보 저장
       await setDoc(doc(db, "users", newUser.uid), {
         email: email,
-        address: address,
-        phoneNumber: phoneNumber,
-        membershipLevel: membershipLevel,
-        createdAt: new Date()?.toLocaleString("ko-KR"),
+        fullCompanyName,
+        tradingName,
+        companyAddress,
+        personInCharge: {
+          name: personInChargeName,
+          title: personInChargeTitle
+        },
+        telNo,
+        mobNo,
+        webAddress,
+        businessType,
+        installationService,
+        salesProducts,
+        tradeAmount,
+        preferentialModel,
+        estimatedPurchase,
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
+        categoryLevel: selectedCategory.level,
+        createdAt: new Date().toLocaleString("ko-KR"),
         uid: newUser.uid,
       });
 
       toast.success("사용자가 성공적으로 등록되었습니다.");
 
-      // 관리자 계정으로 다시 로그인 (관리자 계정 유지)
+      // 관리자 계정으로 다시 로그인
       await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
       toast.info("관리자 계정으로 복귀했습니다.");
 
@@ -129,14 +224,33 @@ export default function UserForm() {
     if (!userId) return;
     
     try {
+      const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
+      if (!selectedCategory) {
+        throw new Error("선택한 회원 등급을 찾을 수 없습니다.");
+      }
+
       const userRef = doc(db, "users", userId);
-      
-      // 비밀번호는 수정하지 않음 (Firebase Auth 비밀번호 변경은 별도 과정 필요)
       await updateDoc(userRef, {
-        address: address,
-        phoneNumber: phoneNumber,
-        membershipLevel: membershipLevel,
-        updatedAt: new Date()?.toLocaleString("ko-KR"),
+        fullCompanyName,
+        tradingName,
+        companyAddress,
+        personInCharge: {
+          name: personInChargeName,
+          title: personInChargeTitle
+        },
+        telNo,
+        mobNo,
+        webAddress,
+        businessType,
+        installationService,
+        salesProducts,
+        tradeAmount,
+        preferentialModel,
+        estimatedPurchase,
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
+        categoryLevel: selectedCategory.level,
+        updatedAt: new Date().toLocaleString("ko-KR"),
       });
 
       toast.success("사용자 정보가 성공적으로 업데이트되었습니다.");
@@ -167,19 +281,51 @@ export default function UserForm() {
 
   // 사용자 삭제 핸들러
   const handleDelete = async () => {
-    if (!userId) return;
+    if (!userId || !user?.email) return;
 
     const confirmed = window.confirm("이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
     if (!confirmed) return;
 
+    // 관리자 비밀번호 확인
+    const adminPassword = prompt("관리자 계정의 비밀번호를 입력하세요.");
+    if (!adminPassword) {
+      toast.error("관리자 인증이 필요합니다.");
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // 1. 현재 관리자 재인증
+      await signInWithEmailAndPassword(auth, user.email, adminPassword);
+
+      // 2. Firestore에서 사용자 데이터 가져오기
+      const userDoc = await getDoc(doc(db, "users", userId));
+      if (!userDoc.exists()) {
+        throw new Error("사용자 정보를 찾을 수 없습니다.");
+      }
+      const userData = userDoc.data();
+
+      // 3. Firestore에서 사용자 데이터 삭제
       await deleteDoc(doc(db, "users", userId));
-      toast.success("사용자가 삭제되었습니다.");
+
+      // 4. Firebase Authentication에서 사용자 삭제
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, userData.email, "temporary_access");
+        const userToDelete = userCredential.user;
+        await deleteUser(userToDelete);
+      } catch (authError) {
+        console.error("Error deleting user from Authentication:", authError);
+        toast.warning("사용자 계정은 Firestore에서만 삭제되었습니다. Authentication에서 수동으로 삭제가 필요할 수 있습니다.");
+      }
+
+      // 5. 관리자로 다시 로그인
+      await signInWithEmailAndPassword(auth, user.email, adminPassword);
+
+      toast.success("사용자가 성공적으로 삭제되었습니다.");
       navigate("/users");
     } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("사용자 삭제 중 오류가 발생했습니다.");
+      console.error("Error during delete process:", error);
+      toast.error("사용자 삭제 중 오류가 발생했습니다. 관리자 인증을 확인해주세요.");
       setIsLoading(false);
     }
   };
@@ -257,13 +403,13 @@ export default function UserForm() {
                 </label>
                 <select
                   id="membershipLevel"
-                  value={membershipLevel}
-                  onChange={(e) => setMembershipLevel(e.target.value as MembershipLevelType)}
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {MEMBERSHIP_LEVELS.map((level) => (
-                    <option value={level} key={level}>
-                      {level}
+                  {categories.map((category) => (
+                    <option value={category.id} key={category.id}>
+                      {category.name} (Level {category.level})
                     </option>
                   ))}
                 </select>
@@ -272,32 +418,205 @@ export default function UserForm() {
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">연락처 정보</h3>
+            <h3 className="text-lg font-medium text-gray-900">회사 정보</h3>
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-500">
-                  전화번호
+                <label htmlFor="fullCompanyName" className="block text-sm font-medium text-gray-500">
+                  Full Company Name
                 </label>
                 <input
-                  type="tel"
-                  id="phoneNumber"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="01012345678"
+                  type="text"
+                  id="fullCompanyName"
+                  value={fullCompanyName}
+                  onChange={(e) => setFullCompanyName(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="address" className="block text-sm font-medium text-gray-500">
-                  주소
+                <label htmlFor="tradingName" className="block text-sm font-medium text-gray-500">
+                  Trading Name
                 </label>
                 <input
                   type="text"
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  id="tradingName"
+                  value={tradingName}
+                  onChange={(e) => setTradingName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="companyAddress" className="block text-sm font-medium text-gray-500">
+                  Company Address
+                </label>
+                <input
+                  type="text"
+                  id="companyAddress"
+                  value={companyAddress}
+                  onChange={(e) => setCompanyAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="personInChargeName" className="block text-sm font-medium text-gray-500">
+                    Person in Charge (Name)
+                  </label>
+                  <input
+                    type="text"
+                    id="personInChargeName"
+                    value={personInChargeName}
+                    onChange={(e) => setPersonInChargeName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="personInChargeTitle" className="block text-sm font-medium text-gray-500">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    id="personInChargeTitle"
+                    value={personInChargeTitle}
+                    onChange={(e) => setPersonInChargeTitle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="telNo" className="block text-sm font-medium text-gray-500">
+                    Tel No.
+                  </label>
+                  <input
+                    type="tel"
+                    id="telNo"
+                    value={telNo}
+                    onChange={(e) => setTelNo(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="mobNo" className="block text-sm font-medium text-gray-500">
+                    Mob No.
+                  </label>
+                  <input
+                    type="tel"
+                    id="mobNo"
+                    value={mobNo}
+                    onChange={(e) => setMobNo(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="webAddress" className="block text-sm font-medium text-gray-500">
+                  Web Address
+                </label>
+                <input
+                  type="url"
+                  id="webAddress"
+                  value={webAddress}
+                  onChange={(e) => setWebAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="businessType" className="block text-sm font-medium text-gray-500">
+                    Business Type
+                  </label>
+                  <select
+                    id="businessType"
+                    value={businessType}
+                    onChange={(e) => setBusinessType(e.target.value as 'B2B' | 'B2C' | 'Other')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="B2B">B2B</option>
+                    <option value="B2C">B2C</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="installationService" className="block text-sm font-medium text-gray-500">
+                    Installation Service
+                  </label>
+                  <select
+                    id="installationService"
+                    value={installationService}
+                    onChange={(e) => setInstallationService(e.target.value as 'Yes' | 'No')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="salesProducts" className="block text-sm font-medium text-gray-500">
+                  Sales Products
+                </label>
+                <textarea
+                  id="salesProducts"
+                  value={salesProducts}
+                  onChange={(e) => setSalesProducts(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="tradeAmount" className="block text-sm font-medium text-gray-500">
+                  Trade Amount
+                </label>
+                <input
+                  type="text"
+                  id="tradeAmount"
+                  value={tradeAmount}
+                  onChange={(e) => setTradeAmount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="preferentialModel" className="block text-sm font-medium text-gray-500">
+                  Preferential Model
+                </label>
+                <input
+                  type="text"
+                  id="preferentialModel"
+                  value={preferentialModel}
+                  onChange={(e) => setPreferentialModel(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="estimatedPurchase" className="block text-sm font-medium text-gray-500">
+                  Estimated Amount of Purchase
+                </label>
+                <input
+                  type="text"
+                  id="estimatedPurchase"
+                  value={estimatedPurchase}
+                  onChange={(e) => setEstimatedPurchase(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />

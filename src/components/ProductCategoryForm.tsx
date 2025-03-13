@@ -8,7 +8,7 @@ import AuthContext from "context/AuthContext";
 import { ProductCategory } from "types/product";
 import styles from './CategoryForm.module.css';
 
-export default function CategoryForm() {
+export default function ProductCategoryForm() {
   const { categoryId } = useParams();
   const isEditMode = !!categoryId;
   const navigate = useNavigate();
