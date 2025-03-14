@@ -7,6 +7,7 @@ export const COLLECTIONS = {
   CARTS: 'carts',
   POSTS: 'posts',
   CUSTOMER_PRICES: 'customerPrices',
+  CUSTOMER_PRICE_HISTORY: 'customerPriceHistory',
 } as const;
 
 // 공통 필드 타입 정의
@@ -123,4 +124,23 @@ export interface CustomerPrice extends BaseDocument {
     categoryId: string;
     categoryName: string;
   }>;
+}
+
+// 고객별 맞춤 가격 수정 이력 타입 정의
+export interface PriceHistoryItem {
+  adminEmail: string;
+  updatedAt: string;
+  changes: Array<{
+    productId: string;
+    productName: string;
+    previousPrice: number;
+    newPrice: number;
+  }>;
+}
+
+export interface CustomerPriceHistory extends BaseDocument {
+  userId: string;
+  userEmail: string;
+  companyName: string;
+  history: PriceHistoryItem[];
 } 

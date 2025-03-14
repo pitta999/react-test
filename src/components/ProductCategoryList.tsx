@@ -4,6 +4,7 @@ import { db } from "firebaseApp";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ProductCategory } from "types/product";
+import Loader from "./Loader";
 
 export default function ProductCategoryList() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -46,11 +47,7 @@ export default function ProductCategoryList() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

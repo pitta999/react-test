@@ -8,6 +8,8 @@ import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
 import { ProductCategory } from "types/product";
 import { UserCategory } from "types/user";
+import Loader from "./Loader";
+import { COLLECTIONS } from "types/schema";
 
 // 상품 카테고리 타입 정의
 export type ProductCategoryType = "clothing" | "electronics" | "furniture" | "books" | "food" | "other";
@@ -294,21 +296,46 @@ export default function ProductForm() {
         updatedBy: user?.email,
       };
       
+      let newProductId = "";
+
       if (isEditMode && productId) {
-        await updateDoc(doc(db, "products", productId), productData);
+        await updateDoc(doc(db, COLLECTIONS.PRODUCTS, productId), productData);
         toast.success("상품 정보가 수정되었습니다.");
-        navigate("/products/manage");
       } else {
-        const productRef = doc(db, "products", uuidv4());
+        // 새 상품 등록
+        const productRef = doc(db, COLLECTIONS.PRODUCTS, uuidv4());
+        newProductId = productRef.id;
         await setDoc(productRef, {
           ...productData,
           id: productRef.id,
           createdAt: new Date().toLocaleString("ko-KR"),
           createdBy: user?.email,
         });
+
+        // 모든 고객의 customerPrices 문서에 새 상품 추가
+        const customerPricesSnapshot = await getDocs(collection(db, COLLECTIONS.CUSTOMER_PRICES));
+        const updatePromises = customerPricesSnapshot.docs.map(async (customerPriceDoc) => {
+          const customerPriceData = customerPriceDoc.data();
+          const newPrices = [...customerPriceData.prices, {
+            productId: newProductId,
+            productName: name,
+            regularPrice: Number(price),
+            customPrice: Number(price), // 초기 맞춤가격은 정가로 설정
+            categoryId: selectedCategory.id,
+            categoryName: selectedCategory.name,
+          }];
+
+          await updateDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, customerPriceDoc.id), {
+            prices: newPrices,
+            updatedAt: new Date().toLocaleString("ko-KR"),
+            updatedBy: user?.email,
+          });
+        });
+
+        await Promise.all(updatePromises);
         toast.success("상품이 등록되었습니다.");
-        navigate("/products/manage");
       }
+      navigate("/products/manage");
     } catch (error: any) {
       console.error("Error saving product:", error);
       toast.error(error?.message || "상품 저장 중 오류가 발생했습니다.");
@@ -347,11 +374,7 @@ export default function ProductForm() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

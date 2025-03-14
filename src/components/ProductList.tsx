@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
 import { useCart } from "context/CartContext";
 import CartSidebar from "./CartSidebar";
+import Loader from "./Loader";
 
 interface ProductType {
   id: string;
@@ -226,11 +227,7 @@ export default function ProductList() {
   );
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

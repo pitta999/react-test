@@ -3,6 +3,7 @@ import { db } from "firebaseApp";
 import { doc, getDoc } from "firebase/firestore";
 import AuthContext from "context/AuthContext";
 import { toast } from "react-toastify";
+import Loader from "./Loader";
 
 interface UserInfo {
   uid: string;
@@ -62,11 +63,7 @@ export default function ProfileInfo() {
   }, [user]);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!userInfo) {

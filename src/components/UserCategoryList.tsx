@@ -4,6 +4,7 @@ import { db } from "firebaseApp";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { UserCategory } from "./UserCategoryForm";
+import Loader from "./Loader";
 
 export default function UserCategoryList() {
   const [categories, setCategories] = useState<UserCategory[]>([]);
@@ -46,11 +47,7 @@ export default function UserCategoryList() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

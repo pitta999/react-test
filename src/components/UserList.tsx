@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { db } from "firebaseApp";
 import { collection, getDocs } from "firebase/firestore";
 import { toast } from "react-toastify";
+import Loader from "./Loader";
 
 interface UserType {
   uid: string;
@@ -52,11 +53,7 @@ export default function UserList() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

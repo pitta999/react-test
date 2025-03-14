@@ -5,6 +5,7 @@ import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
+import Loader from "./Loader";
 
 interface ProductDetailType {
   id: string;
@@ -69,7 +70,7 @@ export default function ProductDetail() {
   };
 
   if (isLoading) {
-    return <div className="loader">로딩 중...</div>;
+    return <Loader />;
   }
 
   if (!product) {

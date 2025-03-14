@@ -8,6 +8,7 @@ import AuthContext from "context/AuthContext";
 import { UserCategory } from "./UserCategoryForm";
 import { getUserById, getUserCategories, getProductsByCategory } from 'utils/firebase';
 import { User, COLLECTIONS, Product } from 'types/schema';
+import Loader from "./Loader";
 
 interface UserFormData {
   email: string;
@@ -360,11 +361,7 @@ export default function UserForm() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
