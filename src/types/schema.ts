@@ -119,7 +119,6 @@ export interface CustomerPrice extends BaseDocument {
   prices: Array<{
     productId: string;
     productName: string;
-    regularPrice: number;  // 정가
     customPrice: number;   // 맞춤가격
     categoryId: string;
     categoryName: string;

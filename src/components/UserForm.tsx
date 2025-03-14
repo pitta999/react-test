@@ -218,18 +218,19 @@ export default function UserForm() {
       })) as Product[];
       
       // customerPrices 컬렉션에 초기 데이터 생성
+      const initialPrices = productsData.map(product => ({
+        productId: product.id,
+        productName: product.name,
+        customPrice: product.price,
+        categoryId: product.categoryId,
+        categoryName: product.categoryName,
+      }));
+
       await setDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, newUser.uid), {
         userId: newUser.uid,
         userEmail: email,
         companyName: fullCompanyName,
-        prices: productsData.map(product => ({
-          productId: product.id,
-          productName: product.name,
-          regularPrice: product.price,
-          customPrice: product.price,
-          categoryId: product.categoryId,
-          categoryName: product.categoryName,
-        })),
+        prices: initialPrices,
         createdAt: new Date().toLocaleString("ko-KR"),
         updatedAt: new Date().toLocaleString("ko-KR"),
       });

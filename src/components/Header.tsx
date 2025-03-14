@@ -14,7 +14,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <nav className="flex items-center justify-between">
           <Link to="/" className="text-xl font-bold text-gray-900 hover:text-primary-600">
-            React Blog
+          B2B Order Portal
           </Link>
           
           <div className="flex items-center space-x-6">

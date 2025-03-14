@@ -12,7 +12,6 @@ import Loader from "./Loader";
 interface PriceFormData {
   productId: string;
   productName: string;
-  regularPrice: number;
   customPrice: number;
   categoryId: string;
   categoryName: string;
@@ -68,7 +67,6 @@ export default function UserCustomPrice() {
           const initialPrices = allProducts.map(product => ({
             productId: product.id,
             productName: product.name,
-            regularPrice: product.price,
             customPrice: product.price,
             categoryId: product.categoryId,
             categoryName: product.categoryName,
@@ -175,7 +173,7 @@ export default function UserCustomPrice() {
       setOriginalPrices(prices);
       
       toast.success("맞춤 가격이 저장되었습니다.");
-      navigate(`/users/${userId}/price`);
+      navigate(`/users/${userId}/price/history`);
     } catch (error) {
       console.error("Error saving prices:", error);
       toast.error("가격 저장 중 오류가 발생했습니다.");
@@ -238,7 +236,13 @@ export default function UserCustomPrice() {
                     {price.productName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {price.regularPrice.toLocaleString()}원
+                    {(() => {
+                      const product = products.find(p => p.id === price.productId);
+                    //   console.log('Product found:', product);
+                    //   console.log('Price:', price);
+                    //   console.log('Products array:', products);
+                      return product ? `${product.price.toLocaleString()}원` : '가격 없음';
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input

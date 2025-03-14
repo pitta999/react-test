@@ -57,10 +57,15 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
 export const getProductsByCategory = async (categoryId: string): Promise<Product[]> => {
   try {
-    const q = query(
-      collection(db, COLLECTIONS.PRODUCTS),
-      where("categoryId", "==", categoryId)
-    );
+    let q;
+    if (categoryId === "") {
+      q = query(collection(db, COLLECTIONS.PRODUCTS));
+    } else {
+      q = query(
+        collection(db, COLLECTIONS.PRODUCTS),
+        where("categoryId", "==", categoryId)
+      );
+    }
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
   } catch (error) {

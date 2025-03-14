@@ -319,7 +319,6 @@ export default function ProductForm() {
           const newPrices = [...customerPriceData.prices, {
             productId: newProductId,
             productName: name,
-            regularPrice: Number(price),
             customPrice: Number(price), // 초기 맞춤가격은 정가로 설정
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,

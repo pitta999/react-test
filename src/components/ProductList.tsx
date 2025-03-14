@@ -7,6 +7,7 @@ import AuthContext from "context/AuthContext";
 import { useCart } from "context/CartContext";
 import CartSidebar from "./CartSidebar";
 import Loader from "./Loader";
+import { COLLECTIONS, CustomerPrice } from "types/schema";
 
 interface ProductType {
   id: string;
@@ -20,12 +21,6 @@ interface ProductType {
   imageUrl: string;
   createdAt: string;
   updatedAt?: string;
-  discountPrices: Array<{
-    categoryId: string;
-    categoryName: string;
-    categoryLevel: number;
-    price: number;
-  }>;
 }
 
 interface UserData {
@@ -40,15 +35,17 @@ export default function ProductList() {
   const [companionProducts, setCompanionProducts] = useState<ProductType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [customerPrices, setCustomerPrices] = useState<CustomerPrice | null>(null);
   const { user, isAdmin } = useContext(AuthContext);
   const { addItem } = useCart();
 
-  // 사용자 정보 불러오기
+  // 사용자 정보와 맞춤 가격 불러오기
   useEffect(() => {
     const fetchUserData = async () => {
       if (user?.uid) {
         try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
+          // 사용자 정보 가져오기
+          const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
             setUserData({
@@ -56,6 +53,12 @@ export default function ProductList() {
               categoryName: data.categoryName,
               categoryLevel: data.categoryLevel
             });
+          }
+
+          // 맞춤 가격 가져오기
+          const customerPriceDoc = await getDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, user.uid));
+          if (customerPriceDoc.exists()) {
+            setCustomerPrices(customerPriceDoc.data() as CustomerPrice);
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -72,7 +75,7 @@ export default function ProductList() {
       setIsLoading(true);
       try {
         const productsQuery = query(
-          collection(db, "products"),
+          collection(db, COLLECTIONS.PRODUCTS),
           orderBy("createdAt", "desc")
         );
         
@@ -109,13 +112,13 @@ export default function ProductList() {
 
   // 할인가격 계산 함수
   const getDiscountPrice = (product: ProductType) => {
-    if (!userData || !product.discountPrices) return null;
+    if (!customerPrices) return null;
     
-    const userDiscount = product.discountPrices.find(
-      dp => dp.categoryId === userData.categoryId
+    const customPrice = customerPrices.prices.find(
+      price => price.productId === product.id
     );
     
-    return userDiscount?.price || null;
+    return customPrice?.customPrice || null;
   };
 
   const handleAddToCart = (product: ProductType) => {
