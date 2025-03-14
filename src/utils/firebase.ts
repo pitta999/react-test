@@ -1,6 +1,6 @@
 import { db } from "firebaseApp";
-import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from "firebase/firestore";
-import { COLLECTIONS, User, UserCategory, Product, ProductCategory, Cart } from "types/schema";
+import { collection, doc, getDoc, getDocs, query, where, orderBy, limit, updateDoc, setDoc } from "firebase/firestore";
+import { COLLECTIONS, User, UserCategory, Product, ProductCategory, Cart, CustomerPrice } from "types/schema";
 
 // 사용자 관련 유틸리티
 export const getUserById = async (userId: string): Promise<User | null> => {
@@ -91,4 +91,39 @@ export const getFormattedDate = (date: Date = new Date()): string => {
     minute: "2-digit",
     second: "2-digit",
   });
+};
+
+// 고객별 맞춤 가격 관련 유틸리티
+export const getCustomerPrices = async (userId: string): Promise<CustomerPrice | null> => {
+  try {
+    const priceDoc = await getDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, userId));
+    if (!priceDoc.exists()) return null;
+    return { ...priceDoc.data(), id: priceDoc.id } as CustomerPrice;
+  } catch (error) {
+    console.error("Error fetching customer prices:", error);
+    return null;
+  }
+};
+
+export const updateCustomerPrices = async (userId: string, data: Omit<CustomerPrice, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> => {
+  try {
+    const priceRef = doc(db, COLLECTIONS.CUSTOMER_PRICES, userId);
+    const priceDoc = await getDoc(priceRef);
+    
+    if (priceDoc.exists()) {
+      await updateDoc(priceRef, {
+        ...data,
+        updatedAt: getFormattedDate(),
+      });
+    } else {
+      await setDoc(priceRef, {
+        ...data,
+        createdAt: getFormattedDate(),
+        updatedAt: getFormattedDate(),
+      });
+    }
+  } catch (error) {
+    console.error("Error updating customer prices:", error);
+    throw error;
+  }
 }; 

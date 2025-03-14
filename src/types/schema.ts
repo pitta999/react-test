@@ -6,6 +6,7 @@ export const COLLECTIONS = {
   PRODUCT_CATEGORIES: 'productCategories',
   CARTS: 'carts',
   POSTS: 'posts',
+  CUSTOMER_PRICES: 'customerPrices',
 } as const;
 
 // 공통 필드 타입 정의
@@ -107,4 +108,19 @@ export interface Comment extends BaseDocument {
     email: string;
     name?: string;
   };
+}
+
+// 고객별 맞춤 가격 타입 정의
+export interface CustomerPrice extends BaseDocument {
+  userId: string;  // 사용자 UID
+  userEmail: string;  // 사용자 이메일
+  companyName: string;  // 회사명
+  prices: Array<{
+    productId: string;
+    productName: string;
+    regularPrice: number;  // 정가
+    customPrice: number;   // 맞춤가격
+    categoryId: string;
+    categoryName: string;
+  }>;
 } 

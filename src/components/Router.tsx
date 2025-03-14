@@ -24,6 +24,7 @@ import UserCategoriesPage from "pages/users/categories";
 import NewUserCategoryPage from "pages/users/categories/new";
 import EditUserCategoryPage from "pages/users/categories/edit/[id]";
 import CartPage from "pages/cart";
+import UserCustomPriceForm from "pages/users/price";
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -64,6 +65,10 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route 
               path="/users/:userId/edit" 
               element={isAdmin ? <UserForm /> : <Navigate replace to="/" />} 
+            />
+            <Route 
+              path="/users/:userId/price" 
+              element={isAdmin ? <UserCustomPriceForm /> : <Navigate replace to="/" />} 
             />
             
             {/* 어드민 전용 회원 등급 관리 라우트 */}

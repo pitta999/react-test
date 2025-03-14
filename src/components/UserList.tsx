@@ -126,6 +126,12 @@ export default function UserList() {
                     >
                       수정
                     </Link>
+                    <Link
+                      to={`/users/${user.uid}/price`}
+                      className="text-indigo-600 hover:text-indigo-900"
+                    >
+                      맞춤 가격
+                    </Link>
                   </div>
                 </td>
               </tr>

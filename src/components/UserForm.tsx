@@ -6,8 +6,8 @@ import { doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs, collection } from "
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
 import { UserCategory } from "./UserCategoryForm";
-import { getUserById, getUserCategories } from 'utils/firebase';
-import { User } from 'types/schema';
+import { getUserById, getUserCategories, getProductsByCategory } from 'utils/firebase';
+import { User, COLLECTIONS, Product } from 'types/schema';
 
 interface UserFormData {
   email: string;
@@ -209,6 +209,30 @@ export default function UserForm() {
         uid: newUser.uid,
       });
 
+      // 모든 제품 정보 가져오기
+      const productsSnapshot = await getDocs(collection(db, COLLECTIONS.PRODUCTS));
+      const productsData = productsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Product[];
+      
+      // customerPrices 컬렉션에 초기 데이터 생성
+      await setDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, newUser.uid), {
+        userId: newUser.uid,
+        userEmail: email,
+        companyName: fullCompanyName,
+        prices: productsData.map(product => ({
+          productId: product.id,
+          productName: product.name,
+          regularPrice: product.price,
+          customPrice: product.price,
+          categoryId: product.categoryId,
+          categoryName: product.categoryName,
+        })),
+        createdAt: new Date().toLocaleString("ko-KR"),
+        updatedAt: new Date().toLocaleString("ko-KR"),
+      });
+
       toast.success("사용자가 성공적으로 등록되었습니다.");
 
       // 관리자 계정으로 다시 로그인
@@ -307,8 +331,11 @@ export default function UserForm() {
       }
       const userData = userDoc.data();
 
-      // 3. Firestore에서 사용자 데이터 삭제
-      await deleteDoc(doc(db, "users", userId));
+      // 3. Firestore에서 사용자 데이터와 맞춤 가격 데이터 삭제
+      await Promise.all([
+        deleteDoc(doc(db, "users", userId)),
+        deleteDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, userId))
+      ]);
 
       // 4. Firebase Authentication에서 사용자 삭제
       try {
