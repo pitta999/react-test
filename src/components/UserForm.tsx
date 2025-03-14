@@ -6,6 +6,8 @@ import { doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs, collection } from "
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
 import { UserCategory } from "./UserCategoryForm";
+import { getUserById, getUserCategories } from 'utils/firebase';
+import { User } from 'types/schema';
 
 interface UserFormData {
   email: string;

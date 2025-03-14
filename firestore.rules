@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 인증 확인 함수
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // 관리자 확인 함수
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.categoryLevel == 4;
+    }
+
+    // 자신의 문서인지 확인하는 함수
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 사용자 컬렉션 규칙
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 사용자 카테고리 컬렉션 규칙
+    match /userCategories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // 상품 컬렉션 규칙
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // 상품 카테고리 컬렉션 규칙
+    match /productCategories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // 장바구니 컬렉션 규칙
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // 게시글 컬렉션 규칙
+    match /posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.author.id == request.auth.uid || isAdmin());
+    }
+  }
+} 
