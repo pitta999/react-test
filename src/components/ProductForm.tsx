@@ -1,15 +1,26 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { db, storage } from "firebaseApp";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
+import { ProductCategory } from "types/product";
+import { UserCategory } from "types/user";
+import Loader from "./Loader";
+import { COLLECTIONS } from "types/schema";
 
 // 상품 카테고리 타입 정의
 export type ProductCategoryType = "clothing" | "electronics" | "furniture" | "books" | "food" | "other";
 export const PRODUCT_CATEGORIES: ProductCategoryType[] = ["clothing", "electronics", "furniture", "books", "food", "other"];
+
+interface DiscountPrice {
+  categoryId: string;
+  categoryName: string;
+  categoryLevel: number;
+  price: number;
+}
 
 interface ProductFormProps {
   // 필요한 props가 있다면 여기에 추가
@@ -24,14 +35,68 @@ export default function ProductForm() {
   // 폼 상태 관리
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
+  const [discountPrices, setDiscountPrices] = useState<DiscountPrice[]>([]);
   const [description, setDescription] = useState<string>("");
-  const [category, setCategory] = useState<ProductCategoryType>("other");
   const [stock, setStock] = useState<number>(0);
+  const [stockStatus, setStockStatus] = useState<'ok' | 'nok'>('ok');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  // 카테고리 목록 불러오기
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "productCategories"));
+        const categoryList: ProductCategory[] = [];
+        querySnapshot.forEach((doc) => {
+          categoryList.push(doc.data() as ProductCategory);
+        });
+        setCategories(categoryList.sort((a, b) => a.name.localeCompare(b.name)));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("카테고리 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // 사용자 카테고리 목록 불러오기
+  useEffect(() => {
+    const fetchUserCategories = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "userCategories"));
+        const categoryList: UserCategory[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as UserCategory;
+          categoryList.push(data);
+        });
+        // 레벨 순으로 정렬
+        const sortedCategories = categoryList.sort((a, b) => a.level - b.level);
+        setUserCategories(sortedCategories);
+        
+        // 초기 할인가격 배열 설정
+        const initialDiscountPrices = sortedCategories.map(category => ({
+          categoryId: category.id,
+          categoryName: category.name,
+          categoryLevel: category.level,
+          price: 0
+        }));
+        setDiscountPrices(initialDiscountPrices);
+      } catch (error) {
+        console.error("Error fetching user categories:", error);
+        toast.error("회원 등급 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+    };
+
+    fetchUserCategories();
+  }, []);
 
   // 수정 모드일 경우 상품 정보 불러오기
   useEffect(() => {
@@ -45,10 +110,16 @@ export default function ProductForm() {
             setName(productData.name || "");
             setPrice(productData.price || 0);
             setDescription(productData.description || "");
-            setCategory(productData.category || "other");
+            setSelectedCategoryId(productData.categoryId || "");
             setStock(productData.stock || 0);
+            setStockStatus(productData.stockStatus || 'ok');
             setImageUrl(productData.imageUrl || "");
             setPreviewUrl(productData.imageUrl || "");
+            
+            // 할인가격 정보 설정
+            if (productData.discountPrices) {
+              setDiscountPrices(productData.discountPrices);
+            }
           } else {
             toast.error("상품 정보를 찾을 수 없습니다.");
             navigate("/products");
@@ -94,6 +165,17 @@ export default function ProductForm() {
     }
   };
 
+  // 할인가격 변경 핸들러
+  const handleDiscountPriceChange = (categoryId: string, newPrice: number) => {
+    setDiscountPrices(prevPrices => 
+      prevPrices.map(item => 
+        item.categoryId === categoryId 
+          ? { ...item, price: newPrice }
+          : item
+      )
+    );
+  };
+
   // 유효성 검사
   const validateForm = () => {
     if (!name.trim()) {
@@ -103,6 +185,19 @@ export default function ProductForm() {
     
     if (price <= 0) {
       setError("가격은 0보다 커야 합니다.");
+      return false;
+    }
+    
+    // 할인가격 유효성 검사
+    const invalidDiscounts = discountPrices.filter(dp => dp.price < 0 || dp.price > price);
+    if (invalidDiscounts.length > 0) {
+      setError("할인가격은 0 이상이고 정가보다 작아야 합니다.");
+      return false;
+    }
+    
+    // 카테고리 검사 수정
+    if (!selectedCategoryId && categories.length === 0) {
+      setError("카테고리를 선택해주세요.");
       return false;
     }
     
@@ -165,11 +260,9 @@ export default function ProductForm() {
     setIsLoading(true);
     
     try {
-      // 이미지 업로드
       let productImageUrl = imageUrl;
       
       if (imageFile) {
-        // 수정 모드에서 이미지가 변경된 경우, 기존 이미지 삭제
         if (isEditMode && imageUrl) {
           try {
             const oldImageRef = ref(storage, imageUrl);
@@ -181,36 +274,67 @@ export default function ProductForm() {
         
         productImageUrl = await uploadImage();
       }
+
+      // 카테고리 ID가 없으면 첫 번째 카테고리 사용
+      const categoryId = selectedCategoryId || categories[0]?.id;
+      const selectedCategory = categories.find(cat => cat.id === categoryId);
+      if (!selectedCategory) {
+        throw new Error("선택한 카테고리를 찾을 수 없습니다.");
+      }
       
-      // 상품 데이터 객체
       const productData = {
         name,
         price: Number(price),
+        discountPrices,
         description,
-        category,
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
         stock: Number(stock),
+        stockStatus,
         imageUrl: productImageUrl,
         updatedAt: new Date().toLocaleString("ko-KR"),
         updatedBy: user?.email,
       };
       
+      let newProductId = "";
+
       if (isEditMode && productId) {
-        // 기존 상품 업데이트
-        await updateDoc(doc(db, "products", productId), productData);
+        await updateDoc(doc(db, COLLECTIONS.PRODUCTS, productId), productData);
         toast.success("상품 정보가 수정되었습니다.");
-        navigate(`/products/${productId}`);
       } else {
         // 새 상품 등록
-        const productRef = doc(db, "products", uuidv4());
+        const productRef = doc(db, COLLECTIONS.PRODUCTS, uuidv4());
+        newProductId = productRef.id;
         await setDoc(productRef, {
           ...productData,
           id: productRef.id,
           createdAt: new Date().toLocaleString("ko-KR"),
           createdBy: user?.email,
         });
+
+        // 모든 고객의 customerPrices 문서에 새 상품 추가
+        const customerPricesSnapshot = await getDocs(collection(db, COLLECTIONS.CUSTOMER_PRICES));
+        const updatePromises = customerPricesSnapshot.docs.map(async (customerPriceDoc) => {
+          const customerPriceData = customerPriceDoc.data();
+          const newPrices = [...customerPriceData.prices, {
+            productId: newProductId,
+            productName: name,
+            customPrice: Number(price), // 초기 맞춤가격은 정가로 설정
+            categoryId: selectedCategory.id,
+            categoryName: selectedCategory.name,
+          }];
+
+          await updateDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, customerPriceDoc.id), {
+            prices: newPrices,
+            updatedAt: new Date().toLocaleString("ko-KR"),
+            updatedBy: user?.email,
+          });
+        });
+
+        await Promise.all(updatePromises);
         toast.success("상품이 등록되었습니다.");
-        navigate("/products");
       }
+      navigate("/products/manage");
     } catch (error: any) {
       console.error("Error saving product:", error);
       toast.error(error?.message || "상품 저장 중 오류가 발생했습니다.");
@@ -219,111 +343,222 @@ export default function ProductForm() {
     }
   };
 
+  // 상품 삭제 핸들러
+  const handleDelete = async () => {
+    if (!productId) return;
+
+    const confirmed = window.confirm("이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      // 이미지가 있다면 Storage에서 삭제
+      if (imageUrl) {
+        try {
+          const imageRef = ref(storage, imageUrl);
+          await deleteObject(imageRef);
+        } catch (error) {
+          console.error("Error deleting image:", error);
+        }
+      }
+
+      await deleteDoc(doc(db, "products", productId));
+      toast.success("상품이 삭제되었습니다.");
+      navigate("/products/manage");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("상품 삭제 중 오류가 발생했습니다.");
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
-    return <div className="loader">로딩 중...</div>;
+    return <Loader />;
   }
 
   return (
-    <form onSubmit={onSubmit} className="form form--lg">
-      <h1 className="form__title">{isEditMode ? "상품 수정" : "상품 등록"}</h1>
-      
-      <div className="form__block">
-        <label htmlFor="name">상품명</label>
-        <input
-          type="text"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="상품명을 입력하세요"
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="price">가격</label>
-        <input
-          type="number"
-          id="price"
-          value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
-          placeholder="가격을 입력하세요"
-          min="0"
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="category">카테고리</label>
-        <select
-          id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as ProductCategoryType)}
-          required
-        >
-          {PRODUCT_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="stock">재고 수량</label>
-        <input
-          type="number"
-          id="stock"
-          value={stock}
-          onChange={(e) => setStock(Number(e.target.value))}
-          placeholder="재고 수량을 입력하세요"
-          min="0"
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="description">상품 설명</label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="상품에 대한 상세 설명을 입력하세요"
-          rows={5}
-          required
-        />
-      </div>
-      
-      <div className="form__block">
-        <label htmlFor="image">상품 이미지</label>
-        <input
-          type="file"
-          id="image"
-          accept="image/*"
-          onChange={handleImageChange}
-        />
-        {previewUrl && (
-          <div className="image-preview">
-            <img src={previewUrl} alt="상품 이미지 미리보기" />
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <form onSubmit={onSubmit} className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? "상품 수정" : "상품 등록"}
+          </h1>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            상품명
+          </label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="상품명을 입력하세요"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+            정가
+          </label>
+          <input
+            type="number"
+            id="price"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            placeholder="정가를 입력하세요"
+            min="0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            등급별 할인가격
+          </label>
+          <div className="space-y-3">
+            {userCategories.map((category) => (
+              <div key={category.id} className="flex items-center gap-2">
+                <span className="w-24 text-sm text-gray-600">{category.name}</span>
+                <input
+                  type="number"
+                  value={discountPrices.find(dp => dp.categoryId === category.id)?.price || 0}
+                  onChange={(e) => handleDiscountPriceChange(category.id, Number(e.target.value))}
+                  placeholder={`${category.name} 할인가`}
+                  min="0"
+                  max={price}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+            카테고리
+          </label>
+          <select
+            id="category"
+            value={selectedCategoryId || (categories[0]?.id || '')}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2">
+            <Link to="/products/categories" className="text-sm text-primary-600 hover:text-primary-900">
+              카테고리 관리
+            </Link>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
+            재고 수량
+          </label>
+          <input
+            type="number"
+            id="stock"
+            value={stock}
+            onChange={(e) => setStock(Number(e.target.value))}
+            placeholder="재고 수량을 입력하세요"
+            min="0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="stockStatus" className="block text-sm font-medium text-gray-700 mb-2">
+            재고 현황
+          </label>
+          <select
+            id="stockStatus"
+            value={stockStatus}
+            onChange={(e) => setStockStatus(e.target.value as 'ok' | 'nok')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="ok">정상</option>
+            <option value="nok">품절</option>
+          </select>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            상품 설명
+          </label>
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="상품에 대한 상세 설명을 입력하세요"
+            rows={5}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
+            상품 이미지
+          </label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full"
+          />
+          {previewUrl && (
+            <div className="mt-4">
+              <img src={previewUrl} alt="상품 이미지 미리보기" className="max-w-xs rounded-md" />
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="mb-6">
+            <p className="text-red-500 text-sm">{error}</p>
           </div>
         )}
-      </div>
-      
-      {error && (
-        <div className="form__block">
-          <div className="form__error">{error}</div>
-        </div>
-      )}
-      
-      <div className="form__block">
-        <div className="form__buttons">
-          <Link to="/products" className="form__btn--cancel">
+
+        <div className="flex gap-4">
+          <Link
+            to="/products/manage"
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center"
+          >
             취소
           </Link>
-          <button type="submit" className="form__btn--submit" disabled={isLoading}>
-            {isEditMode ? "수정하기" : "등록하기"}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "처리 중..." : isEditMode ? "수정하기" : "등록하기"}
           </button>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              title="삭제"
+            >
+              🗑️
+            </button>
+          )}
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

@@ -5,15 +5,17 @@ import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { ProductCategoryType } from "./ProductForm";
+import Loader from "./Loader";
 
 interface ProductDetailType {
   id: string;
   name: string;
   price: number;
   description: string;
-  category: ProductCategoryType;
+  categoryId: string;
+  categoryName: string;
   stock: number;
+  stockStatus: 'ok' | 'nok';
   imageUrl: string;
   createdAt: string;
   updatedAt?: string;
@@ -60,45 +62,7 @@ export default function ProductDetail() {
     fetchProductDetail();
   }, [productId, navigate]);
 
-  // 상품 삭제 핸들러
-  const handleDelete = async () => {
-    if (!product || !productId) return;
 
-    // 관리자 권한 검사 추가
-    if (!isAdmin) {
-        toast.error("관리자만 상품을 삭제할 수 있습니다.");
-        return;
-    }
-
-    // 삭제 확인
-    const confirmed = window.confirm(`'${product.name}' 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`);
-    
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      // 이미지 삭제
-      if (product.imageUrl) {
-        try {
-          const imageRef = ref(storage, product.imageUrl);
-          await deleteObject(imageRef);
-        } catch (error) {
-          console.error("Error deleting product image:", error);
-          // 이미지 삭제 실패해도 상품 삭제는 계속 진행
-        }
-      }
-      
-      // Firestore에서 상품 문서 삭제
-      await deleteDoc(doc(db, "products", productId));
-      
-      toast.success("상품이 성공적으로 삭제되었습니다.");
-      navigate("/products");
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      toast.error("상품 삭제 중 오류가 발생했습니다.");
-      setIsDeleting(false);
-    }
-  };
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
@@ -106,7 +70,7 @@ export default function ProductDetail() {
   };
 
   if (isLoading) {
-    return <div className="loader">로딩 중...</div>;
+    return <Loader />;
   }
 
   if (!product) {
@@ -117,20 +81,7 @@ export default function ProductDetail() {
     <div className="container product-detail">
       <div className="product-detail__header">
         <h1>{product.name}</h1>
-        {isAdmin && (
-          <div className="product-detail__actions">
-            <Link to={`/products/${productId}/edit`} className="product-detail__btn--edit">
-              수정
-            </Link>
-            <button 
-              onClick={handleDelete} 
-              className="product-detail__btn--delete"
-              disabled={isDeleting}
-            >
-              {isDeleting ? '삭제 중...' : '삭제'}
-            </button>
-          </div>
-        )}
+
       </div>
 
       <div className="product-detail__content">
@@ -141,7 +92,7 @@ export default function ProductDetail() {
         <div className="product-detail__info">
           <div className="product-detail__item">
             <span className="product-detail__label">카테고리</span>
-            <span className="product-detail__value badge">{product.category}</span>
+            <span className="product-detail__value badge">{product.categoryName}</span>
           </div>
           
           <div className="product-detail__item">
@@ -152,11 +103,13 @@ export default function ProductDetail() {
           </div>
           
           <div className="product-detail__item">
-            <span className="product-detail__label">재고</span>
-            <span className="product-detail__value">
-              {product.stock > 0 ? `${product.stock}개` : '품절'}
+            <span className="product-detail__label">재고 현황</span>
+            <span className={`product-detail__value badge ${product.stockStatus === 'ok' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {product.stockStatus === 'ok' ? '정상' : '품절'}
             </span>
           </div>
+          
+
           
           <div className="product-detail__description">
             <h3>상품 설명</h3>
@@ -175,13 +128,6 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
-          
-          {product.stock > 0 && (
-            <div className="product-detail__buy">
-              <button className="product-detail__btn--cart">장바구니에 담기</button>
-              <button className="product-detail__btn--buy">바로 구매하기</button>
-            </div>
-          )}
         </div>
       </div>
       

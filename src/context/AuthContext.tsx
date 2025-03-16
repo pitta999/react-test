@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useEffect, useState } from "react";
+import { ReactNode, createContext, useEffect, useState, useContext } from "react";
 import { User, getAuth, onAuthStateChanged } from "firebase/auth";
 import { app, db } from "firebaseApp";
 import { doc, getDoc } from "firebase/firestore";
@@ -34,8 +34,8 @@ export const AuthContextProvider = ({ children }: AuthProps) => {
       if (user) {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
-          // membershipLevel이 'admin'인 경우에만 관리자 권한 부여
-          if (userDoc.exists() && userDoc.data().membershipLevel === "admin") {
+          // categoryLevel이 99인 경우에만 관리자 권한 부여 (최고 관리자 레벨)
+          if (userDoc.exists() && userDoc.data().categoryLevel === 99) {
             setIsAdmin(true);
           } else {
             setIsAdmin(false);
