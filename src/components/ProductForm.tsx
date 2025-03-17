@@ -6,10 +6,8 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebas
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { ProductCategory } from "types/product";
-import { UserCategory } from "types/user";
+import { ProductCategory, COLLECTIONS, UserCategory } from "types/schema";
 import Loader from "./Loader";
-import { COLLECTIONS } from "types/schema";
 
 // 상품 카테고리 타입 정의
 export type ProductCategoryType = "clothing" | "electronics" | "furniture" | "books" | "food" | "other";
@@ -47,6 +45,9 @@ export default function ProductForm() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [status, setStatus] = useState<boolean>(true);  // 사용/미사용 상태 추가
+  const [hsCode, setHsCode] = useState<string>("");  // HS Code
+  const [origin, setOrigin] = useState<string>("KR");  // 원산지 (기본값: KR)
 
   // 카테고리 목록 불러오기
   useEffect(() => {
@@ -115,6 +116,9 @@ export default function ProductForm() {
             setStockStatus(productData.stockStatus || 'ok');
             setImageUrl(productData.imageUrl || "");
             setPreviewUrl(productData.imageUrl || "");
+            setStatus(productData.status ?? true);  // 사용/미사용 상태 설정
+            setHsCode(productData.hsCode || "");  // HS Code
+            setOrigin(productData.origin || "KR");  // 원산지
             
             // 할인가격 정보 설정
             if (productData.discountPrices) {
@@ -291,6 +295,9 @@ export default function ProductForm() {
         categoryName: selectedCategory.name,
         stock: Number(stock),
         stockStatus,
+        status,  // 사용/미사용 상태 추가
+        hsCode,  // HS Code 추가
+        origin,  // 원산지 추가
         imageUrl: productImageUrl,
         updatedAt: new Date().toLocaleString("ko-KR"),
         updatedBy: user?.email,
@@ -394,7 +401,7 @@ export default function ProductForm() {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="상품명을 입력하세요"
+            
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
@@ -402,15 +409,44 @@ export default function ProductForm() {
 
         <div className="mb-6">
           <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
-            정가
+            소비자가
           </label>
           <input
             type="number"
             id="price"
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
-            placeholder="정가를 입력하세요"
+            
             min="0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="hsCode" className="block text-sm font-medium text-gray-700 mb-2">
+            HS Code
+          </label>
+          <input
+            type="text"
+            id="hsCode"
+            value={hsCode}
+            onChange={(e) => setHsCode(e.target.value)}
+
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="origin" className="block text-sm font-medium text-gray-700 mb-2">
+            원산지
+          </label>
+          <input
+            type="text"
+            id="origin"
+            value={origin}
+            onChange={(e) => setOrigin(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
@@ -491,6 +527,22 @@ export default function ProductForm() {
           >
             <option value="ok">정상</option>
             <option value="nok">품절</option>
+          </select>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+            사용 여부
+          </label>
+          <select
+            id="status"
+            value={status ? "true" : "false"}
+            onChange={(e) => setStatus(e.target.value === "true")}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="true">사용</option>
+            <option value="false">미사용</option>
           </select>
         </div>
 

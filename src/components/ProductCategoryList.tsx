@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { db } from "firebaseApp";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { ProductCategory } from "types/product";
+import { ProductCategory, COLLECTIONS } from "types/schema";
 import Loader from "./Loader";
 
 export default function ProductCategoryList() {

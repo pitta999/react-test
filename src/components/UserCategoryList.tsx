@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { db } from "firebaseApp";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { UserCategory } from "./UserCategoryForm";
+import { UserCategory, COLLECTIONS } from "types/schema";
 import Loader from "./Loader";
 
 export default function UserCategoryList() {
@@ -14,7 +14,7 @@ export default function UserCategoryList() {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "userCategories"));
+      const querySnapshot = await getDocs(collection(db, COLLECTIONS.USER_CATEGORIES));
       const categoryList: UserCategory[] = [];
       querySnapshot.forEach((doc) => {
         categoryList.push(doc.data() as UserCategory);
@@ -36,7 +36,7 @@ export default function UserCategoryList() {
   const handleDelete = async (categoryId: string) => {
     if (window.confirm("이 회원 등급을 삭제하시겠습니까?")) {
       try {
-        await deleteDoc(doc(db, "userCategories", categoryId));
+        await deleteDoc(doc(db, COLLECTIONS.USER_CATEGORIES, categoryId));
         toast.success("회원 등급이 삭제되었습니다.");
         fetchCategories(); // 목록 새로고침
       } catch (error) {

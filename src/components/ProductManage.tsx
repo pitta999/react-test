@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { db } from "firebaseApp";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { Product } from "types/product";
+import { Product, COLLECTIONS } from "types/schema";
 import Loader from "./Loader";
 
 export default function ProductManage() {
@@ -102,6 +102,9 @@ export default function ProductManage() {
                 재고 현황
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                사용 여부
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 등록일
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -131,6 +134,15 @@ export default function ProductManage() {
                       : 'bg-red-100 text-red-800'
                   }`}>
                     {product.stockStatus === 'ok' ? '정상' : '품절'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    product.status 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {product.status ? '사용' : '미사용'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

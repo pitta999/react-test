@@ -19,6 +19,7 @@ interface ProductType {
   stock: number;
   stockStatus: 'ok' | 'nok';
   imageUrl: string;
+  status: boolean;
   createdAt: string;
   updatedAt?: string;
 }
@@ -90,10 +91,11 @@ export default function ProductList() {
           });
         });
         
-        // 카테고리별로 상품 분류
-        setDashcamProducts(allProducts.filter(product => product.categoryName === "dashcam"));
-        setAccessoryProducts(allProducts.filter(product => product.categoryName === "accessory"));
-        setCompanionProducts(allProducts.filter(product => product.categoryName === "companion"));
+        // 카테고리별로 상품 분류 (사용 상태인 상품만 필터링)
+        const activeProducts = allProducts.filter(product => product.status !== false);
+        setDashcamProducts(activeProducts.filter(product => product.categoryName === "dashcam"));
+        setAccessoryProducts(activeProducts.filter(product => product.categoryName === "accessory"));
+        setCompanionProducts(activeProducts.filter(product => product.categoryName === "companion"));
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error("상품 목록을 불러오는 중 오류가 발생했습니다.");
@@ -146,10 +148,10 @@ export default function ProductList() {
                 상품명
               </th>
               <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                정가
+                소비자가
               </th>
               <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                할인가
+                공급가
               </th>
               <th className="w-1/10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 재고 현황

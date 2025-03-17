@@ -1,22 +1,12 @@
 import { useState, useEffect, useContext } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { db } from "firebaseApp";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
+import { UserCategory, COLLECTIONS } from "types/schema";
 import Loader from "./Loader";
-
-export interface UserCategory {
-  id: string;
-  name: string;
-  description: string;
-  level: number;
-  createdAt: string;
-  updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
-}
 
 export default function UserCategoryForm() {
   const { categoryId } = useParams();
@@ -35,7 +25,7 @@ export default function UserCategoryForm() {
       if (isEditMode && categoryId) {
         setIsLoading(true);
         try {
-          const categoryDoc = await getDoc(doc(db, "userCategories", categoryId));
+          const categoryDoc = await getDoc(doc(db, COLLECTIONS.USER_CATEGORIES, categoryId));
           if (categoryDoc.exists()) {
             const categoryData = categoryDoc.data() as UserCategory;
             setName(categoryData.name);
@@ -89,10 +79,10 @@ export default function UserCategoryForm() {
       };
 
       if (isEditMode && categoryId) {
-        await updateDoc(doc(db, "userCategories", categoryId), categoryData);
+        await updateDoc(doc(db, COLLECTIONS.USER_CATEGORIES, categoryId), categoryData);
         toast.success("회원 등급이 수정되었습니다.");
       } else {
-        const newCategoryRef = doc(db, "userCategories", uuidv4());
+        const newCategoryRef = doc(db, COLLECTIONS.USER_CATEGORIES, uuidv4());
         await setDoc(newCategoryRef, {
           ...categoryData,
           id: newCategoryRef.id,

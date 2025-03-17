@@ -59,6 +59,9 @@ export interface Product extends BaseDocument {
   stock: number;
   stockStatus: 'ok' | 'nok';
   imageUrl: string;
+  status: boolean;  // true: 사용, false: 미사용
+  hsCode: string;  // HS Code
+  origin: string;  // 원산지
   discountPrices: Array<{
     categoryId: string;
     categoryName: string;

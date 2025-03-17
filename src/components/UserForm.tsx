@@ -5,9 +5,9 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, de
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs, collection } from "firebase/firestore";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { UserCategory } from "./UserCategoryForm";
+import { UserCategory, COLLECTIONS } from "types/schema";
 import { getUserById, getUserCategories, getProductsByCategory } from 'utils/firebase';
-import { User, COLLECTIONS, Product } from 'types/schema';
+import { User, Product } from 'types/schema';
 import Loader from "./Loader";
 
 interface UserFormData {
@@ -66,7 +66,7 @@ export default function UserForm() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "userCategories"));
+        const querySnapshot = await getDocs(collection(db, COLLECTIONS.USER_CATEGORIES));
         const categoryList: UserCategory[] = [];
         querySnapshot.forEach((doc) => {
           categoryList.push(doc.data() as UserCategory);
@@ -91,7 +91,7 @@ export default function UserForm() {
       if (isEditMode && userId) {
         setIsLoading(true);
         try {
-          const userDoc = await getDoc(doc(db, "users", userId));
+          const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserFormData;
             setEmail(userData.email || "");
@@ -185,7 +185,7 @@ export default function UserForm() {
       const newUser = userCredential.user;
 
       // Firestore에 추가 사용자 정보 저장
-      await setDoc(doc(db, "users", newUser.uid), {
+      await setDoc(doc(db, COLLECTIONS.USERS, newUser.uid), {
         email: email,
         fullCompanyName,
         tradingName,
@@ -257,7 +257,7 @@ export default function UserForm() {
         throw new Error("선택한 회원 등급을 찾을 수 없습니다.");
       }
 
-      const userRef = doc(db, "users", userId);
+      const userRef = doc(db, COLLECTIONS.USERS, userId);
       await updateDoc(userRef, {
         fullCompanyName,
         tradingName,
@@ -327,7 +327,7 @@ export default function UserForm() {
       await signInWithEmailAndPassword(auth, user.email, adminPassword);
 
       // 2. Firestore에서 사용자 데이터 가져오기
-      const userDoc = await getDoc(doc(db, "users", userId));
+      const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
       if (!userDoc.exists()) {
         throw new Error("사용자 정보를 찾을 수 없습니다.");
       }
@@ -335,7 +335,7 @@ export default function UserForm() {
 
       // 3. Firestore에서 사용자 데이터와 맞춤 가격 데이터 삭제
       await Promise.all([
-        deleteDoc(doc(db, "users", userId)),
+        deleteDoc(doc(db, COLLECTIONS.USERS, userId)),
         deleteDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, userId))
       ]);
 
