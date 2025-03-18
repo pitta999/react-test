@@ -16,9 +16,7 @@ interface SortConfig {
 
 export default function ProductManage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [dashcamProducts, setDashcamProducts] = useState<Product[]>([]);
-  const [accessoryProducts, setAccessoryProducts] = useState<Product[]>([]);
-  const [companionProducts, setCompanionProducts] = useState<Product[]>([]);
+  const [categorizedProducts, setCategorizedProducts] = useState<{[key: string]: Product[]}>({});
   const [categories, setCategories] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -102,10 +100,14 @@ export default function ProductManage() {
       
       // 카테고리별로 상품 분류 및 정렬
       const sortedProducts = sortProducts(productList, sortConfig.field, sortConfig.direction);
-      setDashcamProducts(sortedProducts.filter(product => product.categoryName === "dashcam"));
-      setAccessoryProducts(sortedProducts.filter(product => product.categoryName === "accessory"));
-      setCompanionProducts(sortedProducts.filter(product => product.categoryName === "companion"));
-      
+      const categorized: {[key: string]: Product[]} = {};
+      sortedProducts.forEach(product => {
+        if (!categorized[product.categoryName]) {
+          categorized[product.categoryName] = [];
+        }
+        categorized[product.categoryName].push(product);
+      });
+      setCategorizedProducts(categorized);
       setProducts(sortedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -123,24 +125,16 @@ export default function ProductManage() {
   // 정렬 설정이 변경될 때마다 상품 목록 업데이트
   useEffect(() => {
     const sortedProducts = sortProducts(products, sortConfig.field, sortConfig.direction);
-    setDashcamProducts(sortedProducts.filter(product => product.categoryName === "dashcam"));
-    setAccessoryProducts(sortedProducts.filter(product => product.categoryName === "accessory"));
-    setCompanionProducts(sortedProducts.filter(product => product.categoryName === "companion"));
+    const categorized: {[key: string]: Product[]} = {};
+    sortedProducts.forEach(product => {
+      if (!categorized[product.categoryName]) {
+        categorized[product.categoryName] = [];
+      }
+      categorized[product.categoryName].push(product);
+    });
+    setCategorizedProducts(categorized);
   }, [sortConfig]);
 
-  // 상품 삭제
-  const handleDelete = async (productId: string) => {
-    if (window.confirm("이 상품을 삭제하시겠습니까?")) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.PRODUCTS, productId));
-        toast.success("상품이 삭제되었습니다.");
-        fetchProducts(); // 목록 새로고침
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        toast.error("상품 삭제 중 오류가 발생했습니다.");
-      }
-    }
-  };
 
   // 상품 테이블 렌더링 함수
   const renderProductTable = (title: string, products: Product[]) => (
@@ -283,9 +277,9 @@ export default function ProductManage() {
         </Link>
       </div>
 
-      {renderProductTable("DashCam", dashcamProducts)}
-      {renderProductTable("Accessory", accessoryProducts)}
-      {renderProductTable("Companion", companionProducts)}
+      {Object.keys(categorizedProducts).map(categoryName => (
+        renderProductTable(categoryName, categorizedProducts[categoryName])
+      ))}
     </div>
   );
 } 
