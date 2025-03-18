@@ -79,10 +79,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const existingItem = newItems.find(item => item.id === newItem.id);
 
     if (existingItem) {
-      existingItem.quantity += 1;
+      existingItem.quantity += newItem.quantity;
       setItems(newItems);
     } else {
-      newItems.push({ ...newItem, quantity: 1 });
+      newItems.push(newItem);
       setItems(newItems);
     }
 

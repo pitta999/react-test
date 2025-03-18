@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
@@ -12,10 +12,30 @@ export default function CartSidebar() {
     totalAmount 
   } = useCart();
 
+  const [editingQuantity, setEditingQuantity] = useState<{ [key: string]: number }>({});
+
+  const handleQuantityChange = (itemId: string, value: string) => {
+    const numValue = parseInt(value) || 1;
+    setEditingQuantity(prev => ({
+      ...prev,
+      [itemId]: numValue
+    }));
+  };
+
+  const handleQuantityBlur = (itemId: string) => {
+    const quantity = editingQuantity[itemId] || 1;
+    updateQuantity(itemId, quantity);
+    setEditingQuantity(prev => {
+      const newState = { ...prev };
+      delete newState[itemId];
+      return newState;
+    });
+  };
+
   if (!isCartOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50">
+    <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50">
       <div className="h-full flex flex-col">
         {/* 헤더 */}
         <div className="px-4 py-6 bg-gray-50 border-b">
@@ -40,16 +60,8 @@ export default function CartSidebar() {
           ) : (
             <ul className="divide-y divide-gray-200">
               {items.map((item) => (
-                <li key={item.id} className="py-6 flex">
-                  <div className="flex-shrink-0 h-10 w-10">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  </div>
-
-                  <div className="ml-4 flex-1 flex flex-col">
+                <li key={item.id} className="py-4">
+                  <div className="flex flex-col">
                     <div>
                       <div className="flex justify-between text-base font-medium text-gray-900">
                         <h3>{item.name}</h3>
@@ -60,7 +72,7 @@ export default function CartSidebar() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex-1 flex items-end justify-between text-sm">
+                    <div className="flex-1 flex items-end justify-between text-sm mt-2">
                       <div className="flex items-center">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -68,9 +80,29 @@ export default function CartSidebar() {
                         >
                           -
                         </button>
-                        <span className="px-4 py-1 border-t border-b">
-                          {item.quantity}
-                        </span>
+                        {editingQuantity[item.id] !== undefined ? (
+                          <input
+                            type="number"
+                            min="1"
+                            value={editingQuantity[item.id]}
+                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                            onBlur={() => handleQuantityBlur(item.id)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleQuantityBlur(item.id);
+                              }
+                            }}
+                            className="w-16 px-2 py-1 border-t border-b text-center focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <span 
+                            className="px-4 py-1 border-t border-b cursor-pointer"
+                            onClick={() => setEditingQuantity(prev => ({ ...prev, [item.id]: item.quantity }))}
+                          >
+                            {item.quantity}
+                          </span>
+                        )}
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="px-2 py-1 border rounded-r"

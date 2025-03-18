@@ -48,6 +48,7 @@ export default function ProductForm() {
   const [status, setStatus] = useState<boolean>(true);  // 사용/미사용 상태 추가
   const [hsCode, setHsCode] = useState<string>("");  // HS Code
   const [origin, setOrigin] = useState<string>("KR");  // 원산지 (기본값: KR)
+  const [weight, setWeight] = useState<number>(0);  // 무게 (기본값: 0)
 
   // 카테고리 목록 불러오기
   useEffect(() => {
@@ -119,6 +120,7 @@ export default function ProductForm() {
             setStatus(productData.status ?? true);  // 사용/미사용 상태 설정
             setHsCode(productData.hsCode || "");  // HS Code
             setOrigin(productData.origin || "KR");  // 원산지
+            setWeight(productData.weight || 0);  // 무게
             
             // 할인가격 정보 설정
             if (productData.discountPrices) {
@@ -298,6 +300,7 @@ export default function ProductForm() {
         status,  // 사용/미사용 상태 추가
         hsCode,  // HS Code 추가
         origin,  // 원산지 추가
+        weight: Number(weight),  // 무게 추가
         imageUrl: productImageUrl,
         updatedAt: new Date().toLocaleString("ko-KR"),
         updatedBy: user?.email,
@@ -447,6 +450,21 @@ export default function ProductForm() {
             id="origin"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-2">
+            무게 (g)
+          </label>
+          <input
+            type="number"
+            id="weight"
+            value={weight}
+            onChange={(e) => setWeight(Number(e.target.value))}
+            min="0"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />

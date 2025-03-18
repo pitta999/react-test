@@ -30,6 +30,10 @@ interface UserData {
   categoryLevel: number;
 }
 
+interface ProductQuantity {
+  [key: string]: number;
+}
+
 export default function ProductList() {
   const [dashcamProducts, setDashcamProducts] = useState<ProductType[]>([]);
   const [accessoryProducts, setAccessoryProducts] = useState<ProductType[]>([]);
@@ -37,6 +41,8 @@ export default function ProductList() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [customerPrices, setCustomerPrices] = useState<CustomerPrice | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [quantities, setQuantities] = useState<ProductQuantity>({});
   const { user, isAdmin } = useContext(AuthContext);
   const { addItem } = useCart();
 
@@ -107,6 +113,17 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
+  // 검색어에 따라 상품 필터링하는 함수
+  const filterProducts = (products: ProductType[]) => {
+    if (!searchQuery.trim()) return products;
+    
+    const query = searchQuery.toLowerCase();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.description.toLowerCase().includes(query)
+    );
+  };
+
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
@@ -123,17 +140,44 @@ export default function ProductList() {
     return customPrice?.customPrice || null;
   };
 
+  // 수량 변경 핸들러
+  const handleQuantityChange = (productId: string, value: string) => {
+    const numValue = parseInt(value) || 1;
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: numValue
+    }));
+  };
+
+  // 합계 계산 함수
+  const calculateTotal = (product: ProductType) => {
+    const quantity = quantities[product.id] || 1;
+    const price = getDiscountPrice(product) || product.price;
+    return quantity * price;
+  };
+
+  // 장바구니 담기 핸들러
   const handleAddToCart = (product: ProductType) => {
+    const quantity = quantities[product.id] || 1;
+
     const discountPrice = getDiscountPrice(product);
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
       discountPrice: discountPrice || undefined,
-      quantity: 1,
+      quantity: quantity,
       imageUrl: product.imageUrl,
       categoryName: product.categoryName
     });
+
+    // 수량 초기화
+    setQuantities(prev => ({
+      ...prev,
+      [product.id]: 1
+    }));
+
+    // toast.success(`${product.name} ${quantity}개가 장바구니에 추가되었습니다.`);
   };
 
   // 섹션 렌더링 함수
@@ -147,14 +191,20 @@ export default function ProductList() {
               <th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 상품명
               </th>
-              <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-1/10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                재고
+              </th>
+              <th className="w-1/5 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 소비자가
               </th>
-              <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-1/5 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 공급가
               </th>
-              <th className="w-1/10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                재고 현황
+              <th className="w-1/10 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                수량
+              </th>
+              <th className="w-1/5 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                합계
               </th>
               <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 작업
@@ -164,6 +214,7 @@ export default function ProductList() {
           <tbody className="bg-white divide-y divide-gray-200">
             {products.map((product) => {
               const discountPrice = getDiscountPrice(product);
+              const total = calculateTotal(product);
               return (
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="w-2/5 px-6 py-4 whitespace-nowrap">
@@ -176,10 +227,19 @@ export default function ProductList() {
                       </div>
                     </div>
                   </td>
-                  <td className="w-1/5 px-6 py-4 whitespace-nowrap">
+                  <td className="w-1/10 px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      product.stockStatus === 'ok' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {product.stockStatus === 'ok' ? '정상' : '품절'}
+                    </span>
+                  </td>
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
                     <div className="text-sm text-gray-900">{formatPrice(product.price)}원</div>
                   </td>
-                  <td className="w-1/5 px-6 py-4 whitespace-nowrap">
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
                     {discountPrice ? (
                       <div className="text-sm text-primary-600 font-semibold">
                         {formatPrice(discountPrice)}원
@@ -191,14 +251,19 @@ export default function ProductList() {
                       <div className="text-sm text-gray-500">-</div>
                     )}
                   </td>
-                  <td className="w-1/10 px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      product.stockStatus === 'ok' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stockStatus === 'ok' ? '정상' : '품절'}
-                    </span>
+                  <td className="w-1/10 px-6 py-4 whitespace-nowrap text-right">
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantities[product.id] || 1}
+                      onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                      className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+                    />
+                  </td>
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
+                    <div className="text-sm font-semibold text-primary-600">
+                      {formatPrice(total)}원
+                    </div>
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
@@ -220,7 +285,7 @@ export default function ProductList() {
             })}
             {products.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                   등록된 상품이 없습니다.
                 </td>
               </tr>
@@ -244,14 +309,16 @@ export default function ProductList() {
             <input
               type="text"
               placeholder="상품 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
 
-        {renderProductSection("DashCam", dashcamProducts)}
-        {renderProductSection("Accessory", accessoryProducts)}
-        {renderProductSection("Companion", companionProducts)}
+        {renderProductSection("DashCam", filterProducts(dashcamProducts))}
+        {renderProductSection("Accessory", filterProducts(accessoryProducts))}
+        {renderProductSection("Companion", filterProducts(companionProducts))}
       </div>
       <CartSidebar />
     </>
