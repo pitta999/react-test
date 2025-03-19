@@ -36,6 +36,12 @@ export default function Header() {
                     >
                       상품
                     </Link>
+                    <Link
+                      to="/admin/orders"
+                      className="text-red-600 hover:text-red-700 font-medium"
+                    >
+                      주문내역
+                    </Link>
                   </>
                 )}
                 <Link to="/posts" className="text-gray-600 hover:text-gray-900">
@@ -54,6 +60,12 @@ export default function Header() {
                 </Link>
                 <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                   프로필
+                </Link>
+                <Link
+                  to="/order-history"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  주문 내역
                 </Link>
               </>
             ) : (

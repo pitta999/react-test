@@ -26,10 +26,10 @@ import EditUserCategoryPage from "pages/users/categories/edit/[id]";
 import CartPage from "pages/cart";
 import UserCustomPrice from "pages/users/price";
 import UserPriceHistoryPage from "pages/users/price/history";
-import OrderComplete from "components/order/OrderComplete";
-import OrderHistory from "components/order/OrderHistory";
-import OrderDetail from "components/order/OrderDetail";
-import AdminOrderList from "components/order/AdminOrderList";
+import OrderComplete from "pages/order/OrderComplete";
+import OrderHistory from "pages/order/OrderHistory";
+import OrderDetail from "pages/order/OrderDetail";
+import AdminOrderList from "pages/order/AdminOrderList";
 
 interface RouterProps {
   isAuthenticated: boolean;
