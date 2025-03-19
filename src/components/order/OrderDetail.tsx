@@ -328,19 +328,17 @@ export default function OrderDetail() {
           </div>
 
           {order.paymentStatus === 'pending' && (
-            <div className="mt-6">
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={handlePayment}
                 disabled={isInitiatingPayment}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
+                className={`w-60 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
                   isInitiatingPayment ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
                 }`}
               >
                 {isInitiatingPayment ? '처리 중...' : '결제하기'}
               </button>
-              <p className="mt-2 text-sm text-gray-500 text-center">
-                * 결제 시스템은 현재 개발 중입니다. Stripe 결제가 연동될 예정입니다.
-              </p>
+              
             </div>
           )}
         </div>

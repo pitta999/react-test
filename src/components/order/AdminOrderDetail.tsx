@@ -158,24 +158,6 @@ export default function AdminOrderDetail() {
     updateTotalSubtotal(newItems);
   };
 
-  const handleItemSubtotalChange = (index: number, value: string) => {
-    const newItems = [...editedItems];
-    const subtotalValue = parseFloat(value) || 0;
-    const quantity = newItems[index].quantity || 1;
-    
-    // 소계 기반으로 할인가 계산
-    if (quantity > 0) {
-      // 소계를 수량으로 나누어 단가 계산 (할인가로 설정)
-      const unitPrice = subtotalValue / quantity;
-      newItems[index].discountPrice = parseFloat(unitPrice.toFixed(2));
-    }
-    
-    setEditedItems(newItems);
-    
-    // 모든 상품의 소계를 합산하여 전체 소계 업데이트
-    updateTotalSubtotal(newItems);
-  };
-
   // 모든 상품의 소계를 합산하여 전체 소계 업데이트하는 함수
   const updateTotalSubtotal = (items: OrderItem[]) => {
     const totalSubtotal = items.reduce((total, item) => {
@@ -406,15 +388,8 @@ export default function AdminOrderDetail() {
                     className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={getItemSubtotal(item)}
-                    onChange={(e) => handleItemSubtotalChange(index, e.target.value)}
-                    className="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  />
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {formatPrice(getItemSubtotal(item))}
                 </td>
               </tr>
             ))}
@@ -454,11 +429,11 @@ export default function AdminOrderDetail() {
             <span className="text-primary-600 text-xl">{formatPrice(calculateTotal())}</span>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 flex justify-end">
             <button
               onClick={handleSaveChanges}
               disabled={isSaving}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
+              className={`w-60 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
                 isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
               }`}
             >

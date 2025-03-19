@@ -30,7 +30,7 @@ import OrderComplete from "pages/order/complete";
 import OrderHistory from "pages/order/history";
 import OrderDetail from "pages/order/detail";
 import AdminOrderList from "pages/order/listAdmin";
-import AdminOrderDetail from "components/order/AdminOrderDetail";
+import AdminOrderDetail from "pages/order/detailAdmin";
 
 interface RouterProps {
   isAuthenticated: boolean;
