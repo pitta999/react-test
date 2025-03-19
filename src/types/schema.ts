@@ -164,6 +164,7 @@ export interface Order extends BaseDocument {
   userEmail: string;       // 주문자 이메일 
   companyName: string;     // 회사명
   items: OrderItem[];      // 주문 아이템 목록
+  subtotal: number;        // 소계 (배송비 제외한 금액)
   totalAmount: number;     // 총 금액
   status: OrderStatus;     // 주문 상태
   shippingAddress?: string; // 배송 주소 
@@ -172,4 +173,5 @@ export interface Order extends BaseDocument {
   paymentStatus?: 'pending' | 'paid' | 'failed'; // 결제 상태
   paymentMethod?: string;  // 결제 방법
   paymentId?: string;      // 결제 ID (Stripe 등의 외부 결제 시스템)
+  shippingCost?: number;   // 배송비
 } 

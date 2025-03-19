@@ -69,6 +69,7 @@ export default function Cart() {
           imageUrl: item.imageUrl,
           categoryName: item.categoryName
         })),
+        subtotal: totalAmount,
         totalAmount,
         status: 'pending' as OrderStatus,
         paymentStatus: 'pending',

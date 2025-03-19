@@ -26,10 +26,11 @@ import EditUserCategoryPage from "pages/users/categories/edit/[id]";
 import CartPage from "pages/cart";
 import UserCustomPrice from "pages/users/price";
 import UserPriceHistoryPage from "pages/users/price/history";
-import OrderComplete from "pages/order/OrderComplete";
-import OrderHistory from "pages/order/OrderHistory";
-import OrderDetail from "pages/order/OrderDetail";
-import AdminOrderList from "pages/order/AdminOrderList";
+import OrderComplete from "pages/order/complete";
+import OrderHistory from "pages/order/history";
+import OrderDetail from "pages/order/detail";
+import AdminOrderList from "pages/order/listAdmin";
+import AdminOrderDetail from "components/order/AdminOrderDetail";
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -58,6 +59,7 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route path="/order-complete/:orderId" element={<OrderComplete />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-detail/:orderId" element={isAuthenticated ? <OrderDetail /> : <Navigate replace to="/" />} />
+            <Route path="/order-detail-admin/:orderId" element={isAdmin ? <AdminOrderDetail /> : <Navigate replace to="/" />} />
             
             {/* 어드민 전용 주문 관리 라우트 */}
             <Route 

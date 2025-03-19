@@ -300,7 +300,7 @@ export default function AdminOrderList() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex flex-col space-y-2">
                       <Link
-                        to={`/order-detail/${order.id}`}
+                        to={`/order-detail-admin/${order.id}`}
                         className="text-primary-600 hover:text-primary-900"
                       >
                         상세보기
