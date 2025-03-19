@@ -144,12 +144,18 @@ export default function AdminOrderDetail() {
       newItems[index].discountPrice = parseFloat(value) || 0;
     }
     setEditedItems(newItems);
+    
+    // 할인가가 변경되면 전체 소계 업데이트
+    updateTotalSubtotal(newItems);
   };
 
   const handleItemQuantityChange = (index: number, value: string) => {
     const newItems = [...editedItems];
     newItems[index].quantity = parseInt(value) || 1;
     setEditedItems(newItems);
+    
+    // 수량이 변경되면 전체 소계 업데이트
+    updateTotalSubtotal(newItems);
   };
 
   const handleItemSubtotalChange = (index: number, value: string) => {
@@ -165,11 +171,24 @@ export default function AdminOrderDetail() {
     }
     
     setEditedItems(newItems);
+    
+    // 모든 상품의 소계를 합산하여 전체 소계 업데이트
+    updateTotalSubtotal(newItems);
+  };
+
+  // 모든 상품의 소계를 합산하여 전체 소계 업데이트하는 함수
+  const updateTotalSubtotal = (items: OrderItem[]) => {
+    const totalSubtotal = items.reduce((total, item) => {
+      const itemPrice = item.discountPrice !== undefined ? item.discountPrice : item.price;
+      return total + (itemPrice * item.quantity);
+    }, 0);
+    
+    setSubtotal(parseFloat(totalSubtotal.toFixed(2)));
   };
 
   const getItemSubtotal = (item: OrderItem) => {
     const itemPrice = item.discountPrice !== undefined ? item.discountPrice : item.price;
-    return itemPrice * item.quantity;
+    return parseFloat((itemPrice * item.quantity).toFixed(2));
   };
 
   const handleSubtotalChange = (value: string) => {
