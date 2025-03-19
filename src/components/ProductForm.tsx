@@ -6,19 +6,12 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebas
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { ProductCategory, COLLECTIONS, UserCategory } from "types/schema";
+import { ProductCategory, COLLECTIONS } from "types/schema";
 import Loader from "./Loader";
 
 // 상품 카테고리 타입 정의
 export type ProductCategoryType = "clothing" | "electronics" | "furniture" | "books" | "food" | "other";
 export const PRODUCT_CATEGORIES: ProductCategoryType[] = ["clothing", "electronics", "furniture", "books", "food", "other"];
-
-interface DiscountPrice {
-  categoryId: string;
-  categoryName: string;
-  categoryLevel: number;
-  price: number;
-}
 
 interface ProductFormProps {
   // 필요한 props가 있다면 여기에 추가
@@ -33,7 +26,6 @@ export default function ProductForm() {
   // 폼 상태 관리
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
-  const [discountPrices, setDiscountPrices] = useState<DiscountPrice[]>([]);
   const [description, setDescription] = useState<string>("");
   const [stock, setStock] = useState<number>(0);
   const [stockStatus, setStockStatus] = useState<'ok' | 'nok'>('ok');
@@ -43,7 +35,6 @@ export default function ProductForm() {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [status, setStatus] = useState<boolean>(true);  // 사용/미사용 상태 추가
   const [hsCode, setHsCode] = useState<string>("");  // HS Code
@@ -69,37 +60,6 @@ export default function ProductForm() {
     fetchCategories();
   }, []);
 
-  // 사용자 카테고리 목록 불러오기
-  useEffect(() => {
-    const fetchUserCategories = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "userCategories"));
-        const categoryList: UserCategory[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data() as UserCategory;
-          categoryList.push(data);
-        });
-        // 레벨 순으로 정렬
-        const sortedCategories = categoryList.sort((a, b) => a.level - b.level);
-        setUserCategories(sortedCategories);
-        
-        // 초기 할인가격 배열 설정
-        const initialDiscountPrices = sortedCategories.map(category => ({
-          categoryId: category.id,
-          categoryName: category.name,
-          categoryLevel: category.level,
-          price: 0
-        }));
-        setDiscountPrices(initialDiscountPrices);
-      } catch (error) {
-        console.error("Error fetching user categories:", error);
-        toast.error("회원 등급 목록을 불러오는 중 오류가 발생했습니다.");
-      }
-    };
-
-    fetchUserCategories();
-  }, []);
-
   // 수정 모드일 경우 상품 정보 불러오기
   useEffect(() => {
     const fetchProductData = async () => {
@@ -121,11 +81,6 @@ export default function ProductForm() {
             setHsCode(productData.hsCode || "");  // HS Code
             setOrigin(productData.origin || "KR");  // 원산지
             setWeight(productData.weight || 0);  // 무게
-            
-            // 할인가격 정보 설정
-            if (productData.discountPrices) {
-              setDiscountPrices(productData.discountPrices);
-            }
           } else {
             toast.error("상품 정보를 찾을 수 없습니다.");
             navigate("/products");
@@ -171,17 +126,6 @@ export default function ProductForm() {
     }
   };
 
-  // 할인가격 변경 핸들러
-  const handleDiscountPriceChange = (categoryId: string, newPrice: number) => {
-    setDiscountPrices(prevPrices => 
-      prevPrices.map(item => 
-        item.categoryId === categoryId 
-          ? { ...item, price: newPrice }
-          : item
-      )
-    );
-  };
-
   // 유효성 검사
   const validateForm = () => {
     if (!name.trim()) {
@@ -191,13 +135,6 @@ export default function ProductForm() {
     
     if (price <= 0) {
       setError("가격은 0보다 커야 합니다.");
-      return false;
-    }
-    
-    // 할인가격 유효성 검사
-    const invalidDiscounts = discountPrices.filter(dp => dp.price < 0 || dp.price > price);
-    if (invalidDiscounts.length > 0) {
-      setError("할인가격은 0 이상이고 정가보다 작아야 합니다.");
       return false;
     }
     
@@ -291,7 +228,6 @@ export default function ProductForm() {
       const productData = {
         name,
         price: Number(price),
-        discountPrices,
         description,
         categoryId: selectedCategory.id,
         categoryName: selectedCategory.name,
@@ -411,19 +347,21 @@ export default function ProductForm() {
         </div>
 
         <div className="mb-6">
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
-            소비자가
+          <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+            가격 (USD)
           </label>
-          <input
-            type="number"
-            id="price"
-            value={price}
-            onChange={(e) => setPrice(Number(e.target.value))}
-            
-            min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-          />
+          <div className="mt-1 relative rounded-md shadow-sm">
+            <input
+              type="number"
+              id="price"
+              className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+              placeholder="0.00"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+              required
+            />
+          </div>
         </div>
 
         <div className="mb-6">
@@ -468,28 +406,6 @@ export default function ProductForm() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            등급별 할인가격
-          </label>
-          <div className="space-y-3">
-            {userCategories.map((category) => (
-              <div key={category.id} className="flex items-center gap-2">
-                <span className="w-24 text-sm text-gray-600">{category.name}</span>
-                <input
-                  type="number"
-                  value={discountPrices.find(dp => dp.categoryId === category.id)?.price || 0}
-                  onChange={(e) => handleDiscountPriceChange(category.id, Number(e.target.value))}
-                  placeholder={`${category.name} 할인가`}
-                  min="0"
-                  max={price}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="mb-6">

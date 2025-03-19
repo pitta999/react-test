@@ -1,12 +1,100 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { useCart } from 'context/CartContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { db } from 'firebaseApp';
+import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
+import AuthContext from 'context/AuthContext';
+import { COLLECTIONS, Order, OrderStatus } from 'types/schema';
 
 export default function Cart() {
-  const { items, removeItem, updateQuantity, totalAmount } = useCart();
+  const { items, removeItem, updateQuantity, totalAmount, clearCart } = useCart();
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+  };
+
+  // 주문 처리 함수
+  const handleOrder = async () => {
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error("장바구니가 비어있습니다.");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+
+      // 사용자 정보 가져오기
+      const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
+      if (!userDoc.exists()) {
+        throw new Error("사용자 정보를 찾을 수 없습니다.");
+      }
+      
+      const userData = userDoc.data();
+      
+      // 주문 번호 생성 (현재 시간 + 랜덤 문자열)
+      const timestamp = new Date().getTime();
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const orderId = `ORD-${timestamp}-${randomString}`;
+      
+      console.log('주문 생성 시작:', orderId);
+      console.log('사용자 ID:', user.uid);
+      console.log('사용자 이메일:', user.email);
+      
+      // 주문 데이터 생성
+      const orderData: Omit<Order, 'id'> = {
+        orderId,
+        userId: user.uid,
+        userEmail: user.email || '',
+        companyName: userData.fullCompanyName || '',
+        items: items.map(item => ({
+          productId: item.id,
+          name: item.name,
+          price: item.price,
+          discountPrice: item.discountPrice,
+          quantity: item.quantity,
+          imageUrl: item.imageUrl,
+          categoryName: item.categoryName
+        })),
+        totalAmount,
+        status: 'pending' as OrderStatus,
+        paymentStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        createdBy: user.email || user.uid
+      };
+      
+      console.log('주문 데이터:', JSON.stringify(orderData));
+      
+      // Firestore에 주문 데이터 저장
+      const orderRef = await addDoc(collection(db, COLLECTIONS.ORDERS), orderData);
+      console.log('주문 저장 완료, ID:', orderRef.id);
+      
+      // 장바구니 비우기
+      clearCart();
+      
+      // 주문 완료 페이지로 이동
+      toast.success(`주문이 완료되었습니다. 주문번호: ${orderId}`);
+      navigate(`/order-complete/${orderRef.id}`, { state: { orderId } });
+      
+    } catch (error) {
+      console.error("주문 처리 중 오류가 발생했습니다:", error);
+      toast.error("주문 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -75,15 +163,15 @@ export default function Cart() {
                     {item.discountPrice ? (
                       <>
                         <span className="line-through text-gray-500">
-                          {formatPrice(item.price)}원
+                          {formatPrice(item.price)}
                         </span>
                         <br />
                         <span className="text-primary-600">
-                          {formatPrice(item.discountPrice)}원
+                          {formatPrice(item.discountPrice)}
                         </span>
                       </>
                     ) : (
-                      <span>{formatPrice(item.price)}원</span>
+                      <span>{formatPrice(item.price)}</span>
                     )}
                   </div>
                 </td>
@@ -107,7 +195,7 @@ export default function Cart() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formatPrice((item.discountPrice || item.price) * item.quantity)}원
+                  {formatPrice((item.discountPrice || item.price) * item.quantity)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
@@ -127,7 +215,7 @@ export default function Cart() {
         <div className="flex justify-between items-center mb-6">
           <span className="text-lg font-medium text-gray-900">총 결제 금액</span>
           <span className="text-2xl font-bold text-primary-600">
-            {formatPrice(totalAmount)}원
+            {formatPrice(totalAmount)}
           </span>
         </div>
         <div className="flex justify-end space-x-4">
@@ -138,9 +226,13 @@ export default function Cart() {
             계속 쇼핑하기
           </Link>
           <button
-            className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700"
+            onClick={handleOrder}
+            disabled={isProcessing}
+            className={`inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
+              isProcessing ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
+            }`}
           >
-            주문하기
+            {isProcessing ? '처리 중...' : '주문하기'}
           </button>
         </div>
       </div>

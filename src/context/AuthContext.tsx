@@ -11,12 +11,14 @@ interface AuthProps {
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAdmin: false,
+  isSuperAdmin: false,
   isLoading: true
 });
 
@@ -24,6 +26,7 @@ export const AuthContextProvider = ({ children }: AuthProps) => {
   const auth = getAuth(app);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -34,18 +37,37 @@ export const AuthContextProvider = ({ children }: AuthProps) => {
       if (user) {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
-          // categoryLevel이 99인 경우에만 관리자 권한 부여 (최고 관리자 레벨)
-          if (userDoc.exists() && userDoc.data().categoryLevel === 99) {
-            setIsAdmin(true);
+          
+          if (userDoc.exists()) {
+            const categoryLevel = userDoc.data().categoryLevel;
+            
+            // categoryLevel이 99인 경우 슈퍼 관리자
+            if (categoryLevel === 99) {
+              setIsAdmin(true);
+              setIsSuperAdmin(true);
+            } 
+            // categoryLevel이 98인 경우 일반 관리자
+            else if (categoryLevel === 98) {
+              setIsAdmin(true);
+              setIsSuperAdmin(false);
+            } 
+            // 그 외 경우는 일반 사용자
+            else {
+              setIsAdmin(false);
+              setIsSuperAdmin(false);
+            }
           } else {
             setIsAdmin(false);
+            setIsSuperAdmin(false);
           }
         } catch (error) {
           console.error("Error checking admin status:", error);
           setIsAdmin(false);
+          setIsSuperAdmin(false);
         }
       } else {
         setIsAdmin(false);
+        setIsSuperAdmin(false);
       }
       
       setIsLoading(false);
@@ -56,7 +78,7 @@ export const AuthContextProvider = ({ children }: AuthProps) => {
   }, [auth]);
 
   return (
-    <AuthContext.Provider value={{ user: currentUser, isAdmin, isLoading }}>
+    <AuthContext.Provider value={{ user: currentUser, isAdmin, isSuperAdmin, isLoading }}>
       {!isLoading ? children : <div>Loading...</div>}
     </AuthContext.Provider>
   );

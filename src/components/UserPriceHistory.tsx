@@ -54,6 +54,16 @@ export default function UserPriceHistory() {
     fetchData();
   }, [userId, navigate]);
 
+  // 가격 포맷팅 함수
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+  };
+
   if (!isAdmin) {
     return <div className="p-4">관리자만 접근할 수 있습니다.</div>;
   }
@@ -133,10 +143,10 @@ export default function UserPriceHistory() {
                           {change.productName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {change.previousPrice.toLocaleString()}원
+                          {formatPrice(change.previousPrice)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {change.newPrice.toLocaleString()}원
+                          {formatPrice(change.newPrice)}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
                           change.newPrice > change.previousPrice 
@@ -146,7 +156,7 @@ export default function UserPriceHistory() {
                               : 'text-gray-500'
                         }`}>
                           {change.newPrice > change.previousPrice ? '+' : ''}
-                          {(change.newPrice - change.previousPrice).toLocaleString()}원
+                          {formatPrice(change.newPrice - change.previousPrice)}
                         </td>
                       </tr>
                     ))}

@@ -37,7 +37,7 @@ export default function UserForm() {
   const { userId } = useParams();
   const isEditMode = !!userId;
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, isAdmin, isSuperAdmin } = useContext(AuthContext);
   const auth = getAuth(app);
 
   const [error, setError] = useState<string>("");
@@ -434,18 +434,35 @@ export default function UserForm() {
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {categories.map((category) => (
-                    <option value={category.id} key={category.id}>
-                      {category.name} (Level {category.level})
-                    </option>
-                  ))}
+                  {categories
+                    .filter(category => 
+                      // 슈퍼 관리자는 모든 등급 선택 가능
+                      isSuperAdmin ? 
+                        true : 
+                        // 일반 관리자는 레벨 98(일반 관리자)과 99(슈퍼 관리자) 등급 선택 불가
+                        (category.level < 98)
+                    )
+                    .map((category) => (
+                      <option value={category.id} key={category.id}>
+                        {category.name} (Level {category.level})
+                      </option>
+                    ))
+                  }
                 </select>
+                {!isSuperAdmin && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    일반 관리자는 관리자 등급(98) 및 슈퍼 관리자 등급(99)을 선택할 수 없습니다.
+                  </p>
+                )}
               </div>
-              <div>
-                <Link to="/users/categories" className="text-sm text-primary-600 hover:text-primary-900">
-                  등급 관리
-                </Link>
-              </div>
+              {isSuperAdmin && (
+                  <div>
+                  <Link to="/users/categories" className="text-sm text-primary-600 hover:text-primary-900">
+                    등급 관리
+                  </Link>
+                </div>
+                )}
+              
             </div>
           </div>
 

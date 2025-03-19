@@ -22,6 +22,8 @@ interface ProductType {
   status: boolean;
   createdAt: string;
   updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 interface UserData {
@@ -35,9 +37,8 @@ interface ProductQuantity {
 }
 
 export default function ProductList() {
-  const [dashcamProducts, setDashcamProducts] = useState<ProductType[]>([]);
-  const [accessoryProducts, setAccessoryProducts] = useState<ProductType[]>([]);
-  const [companionProducts, setCompanionProducts] = useState<ProductType[]>([]);
+  const [categorizedProducts, setCategorizedProducts] = useState<{[key: string]: ProductType[]}>({});
+  const [categories, setCategories] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [customerPrices, setCustomerPrices] = useState<CustomerPrice | null>(null);
@@ -45,6 +46,11 @@ export default function ProductList() {
   const [quantities, setQuantities] = useState<ProductQuantity>({});
   const { user, isAdmin } = useContext(AuthContext);
   const { addItem } = useCart();
+  
+  // 상세보기 모달 상태
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null);
+  const [isProductLoading, setIsProductLoading] = useState<boolean>(false);
 
   // 사용자 정보와 맞춤 가격 불러오기
   useEffect(() => {
@@ -76,6 +82,20 @@ export default function ProductList() {
     fetchUserData();
   }, [user]);
 
+  // 카테고리 목록 불러오기
+  const fetchCategories = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, COLLECTIONS.PRODUCT_CATEGORIES));
+      const categoryMap: {[key: string]: string} = {};
+      querySnapshot.forEach((doc) => {
+        categoryMap[doc.id] = doc.data().name;
+      });
+      setCategories(categoryMap);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   // 상품 목록 불러오기
   useEffect(() => {
     const fetchProducts = async () => {
@@ -97,11 +117,32 @@ export default function ProductList() {
           });
         });
         
-        // 카테고리별로 상품 분류 (사용 상태인 상품만 필터링)
-        const activeProducts = allProducts.filter(product => product.status !== false);
-        setDashcamProducts(activeProducts.filter(product => product.categoryName === "dashcam"));
-        setAccessoryProducts(activeProducts.filter(product => product.categoryName === "accessory"));
-        setCompanionProducts(activeProducts.filter(product => product.categoryName === "companion"));
+        // 카테고리별로 상품 분류 및 정렬
+        const categorized: {[key: string]: ProductType[]} = {};
+        allProducts.forEach(product => {
+          if (!categorized[product.categoryName]) {
+            categorized[product.categoryName] = [];
+          }
+          categorized[product.categoryName].push(product);
+        });
+
+        // 카테고리 순서 지정
+        const categoryOrder = ['dashcam', 'accessory', 'companion'];
+        const orderedCategories = Object.keys(categorized).sort((a, b) => {
+          const indexA = categoryOrder.indexOf(a);
+          const indexB = categoryOrder.indexOf(b);
+          if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+
+        const orderedCategorizedProducts: {[key: string]: ProductType[]} = {};
+        orderedCategories.forEach(categoryName => {
+          orderedCategorizedProducts[categoryName] = categorized[categoryName];
+        });
+
+        setCategorizedProducts(orderedCategorizedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error("상품 목록을 불러오는 중 오류가 발생했습니다.");
@@ -110,8 +151,32 @@ export default function ProductList() {
       }
     };
     
+    fetchCategories();
     fetchProducts();
   }, []);
+
+  // 상품 상세 정보 가져오기
+  const fetchProductDetail = async (productId: string) => {
+    setIsProductLoading(true);
+    try {
+      const productDoc = await getDoc(doc(db, COLLECTIONS.PRODUCTS, productId));
+      
+      if (productDoc.exists()) {
+        setSelectedProduct({
+          ...productDoc.data() as ProductType,
+          id: productDoc.id,
+        });
+        setIsModalOpen(true);
+      } else {
+        toast.error("상품 정보를 찾을 수 없습니다.");
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      toast.error("상품 정보를 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsProductLoading(false);
+    }
+  };
 
   // 검색어에 따라 상품 필터링하는 함수
   const filterProducts = (products: ProductType[]) => {
@@ -126,7 +191,12 @@ export default function ProductList() {
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
   };
 
   // 할인가격 계산 함수
@@ -180,6 +250,88 @@ export default function ProductList() {
     // toast.success(`${product.name} ${quantity}개가 장바구니에 추가되었습니다.`);
   };
 
+  // 상세보기 모달 닫기
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  // 상세보기 모달 컴포넌트
+  const ProductDetailModal = () => {
+    if (!selectedProduct) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50 p-4">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white z-10 flex justify-between items-center p-4 border-b">
+            <h2 className="text-xl font-bold text-gray-900">{selectedProduct.name}</h2>
+            <button 
+              onClick={closeModal}
+              className="text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="md:w-1/2">
+                <img src={selectedProduct.imageUrl} alt={selectedProduct.name} className="w-full h-auto rounded-lg object-cover" />
+              </div>
+              
+              <div className="md:w-1/2">
+                <div className="mb-4">
+                  <span className="text-sm text-gray-500">카테고리</span>
+                  <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ml-2">
+                    {selectedProduct.categoryName}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <span className="text-sm text-gray-500">가격</span>
+                  <div className="text-xl font-semibold text-gray-900 mt-1">
+                    {formatPrice(selectedProduct.price)}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <span className="text-sm text-gray-500">재고 현황</span>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      selectedProduct.stockStatus === 'ok' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedProduct.stockStatus === 'ok' ? '정상' : '품절'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-sm text-gray-500 mb-2">상품 설명</h3>
+                  <p className="text-gray-700 whitespace-pre-line">{selectedProduct.description}</p>
+                </div>
+                
+                <div className="text-xs text-gray-500">
+                  <div>등록일: {selectedProduct.createdAt}
+                    {selectedProduct.createdBy && ` (${selectedProduct.createdBy})`}
+                  </div>
+                  {selectedProduct.updatedAt && (
+                    <div>최근 수정일: {selectedProduct.updatedAt}
+                      {selectedProduct.updatedBy && ` (${selectedProduct.updatedBy})`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   // 섹션 렌더링 함수
   const renderProductSection = (title: string, products: ProductType[]) => (
     <div className="mb-8">
@@ -237,12 +389,12 @@ export default function ProductList() {
                     </span>
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
-                    <div className="text-sm text-gray-900">{formatPrice(product.price)}원</div>
+                    <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
                     {discountPrice ? (
                       <div className="text-sm text-primary-600 font-semibold">
-                        {formatPrice(discountPrice)}원
+                        {formatPrice(discountPrice)}
                         <span className="text-xs text-gray-500 ml-1">
                           ({Math.round((1 - discountPrice / product.price) * 100)}% 할인)
                         </span>
@@ -262,16 +414,16 @@ export default function ProductList() {
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
                     <div className="text-sm font-semibold text-primary-600">
-                      {formatPrice(total)}원
+                      {formatPrice(total)}
                     </div>
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link
-                      to={`/products/${product.id}`}
+                    <button
+                      onClick={() => fetchProductDetail(product.id)}
                       className="text-primary-600 hover:text-primary-900 mr-4"
                     >
                       상세보기
-                    </Link>
+                    </button>
                     <button 
                       onClick={() => handleAddToCart(product)}
                       className="text-primary-600 hover:text-primary-900"
@@ -316,11 +468,15 @@ export default function ProductList() {
           </div>
         </div>
 
-        {renderProductSection("DashCam", filterProducts(dashcamProducts))}
-        {renderProductSection("Accessory", filterProducts(accessoryProducts))}
-        {renderProductSection("Companion", filterProducts(companionProducts))}
+        {Object.keys(categorizedProducts).map(categoryName => (
+          renderProductSection(categoryName, filterProducts(categorizedProducts[categoryName]))
+        ))}
       </div>
       <CartSidebar />
+      
+      {/* 상세보기 모달 */}
+      {isModalOpen && <ProductDetailModal />}
+      {isProductLoading && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"><Loader /></div>}
     </>
   );
 }

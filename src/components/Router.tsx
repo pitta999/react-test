@@ -26,13 +26,17 @@ import EditUserCategoryPage from "pages/users/categories/edit/[id]";
 import CartPage from "pages/cart";
 import UserCustomPrice from "pages/users/price";
 import UserPriceHistoryPage from "pages/users/price/history";
+import OrderComplete from "components/order/OrderComplete";
+import OrderHistory from "components/order/OrderHistory";
+import OrderDetail from "components/order/OrderDetail";
+import AdminOrderList from "components/order/AdminOrderList";
 
 interface RouterProps {
   isAuthenticated: boolean;
 }
 
 export default function Router({ isAuthenticated }: RouterProps) {
-  const { isAdmin } = useContext(AuthContext);
+  const { isAdmin, isSuperAdmin } = useContext(AuthContext);
   
   return (
     <>
@@ -49,6 +53,17 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:productId" element={<ProductDetail />} />
             <Route path="/cart" element={<CartPage />} />
+            
+            {/* 주문 관련 라우트 */}
+            <Route path="/order-complete/:orderId" element={<OrderComplete />} />
+            <Route path="/order-history" element={<OrderHistory />} />
+            <Route path="/order-detail/:orderId" element={isAuthenticated ? <OrderDetail /> : <Navigate replace to="/" />} />
+            
+            {/* 어드민 전용 주문 관리 라우트 */}
+            <Route 
+              path="/admin/orders" 
+              element={isAdmin ? <AdminOrderList /> : <Navigate replace to="/" />} 
+            />
             
             {/* 어드민 전용 사용자 관리 라우트 */}
             <Route 
@@ -76,18 +91,18 @@ export default function Router({ isAuthenticated }: RouterProps) {
               element={isAdmin ? <UserPriceHistoryPage /> : <Navigate replace to="/" />} 
             />
             
-            {/* 어드민 전용 회원 등급 관리 라우트 */}
+            {/* 슈퍼 어드민 전용 회원 등급 관리 라우트 */}
             <Route 
               path="/users/categories" 
-              element={isAdmin ? <UserCategoriesPage /> : <Navigate replace to="/" />} 
+              element={isSuperAdmin ? <UserCategoriesPage /> : <Navigate replace to="/" />} 
             />
             <Route 
               path="/users/categories/new" 
-              element={isAdmin ? <NewUserCategoryPage /> : <Navigate replace to="/" />} 
+              element={isSuperAdmin ? <NewUserCategoryPage /> : <Navigate replace to="/" />} 
             />
             <Route 
               path="/users/categories/edit/:categoryId" 
-              element={isAdmin ? <EditUserCategoryPage /> : <Navigate replace to="/" />} 
+              element={isSuperAdmin ? <EditUserCategoryPage /> : <Navigate replace to="/" />} 
             />
             
             {/* 어드민 전용 상품 관리 라우트 */}

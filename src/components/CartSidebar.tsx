@@ -32,6 +32,16 @@ export default function CartSidebar() {
     });
   };
 
+  // 가격 포맷팅 함수
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+  };
+
   if (!isCartOpen) return null;
 
   return (
@@ -65,11 +75,9 @@ export default function CartSidebar() {
                     <div>
                       <div className="flex justify-between text-base font-medium text-gray-900">
                         <h3>{item.name}</h3>
-                        <p className="ml-4">
-                          {new Intl.NumberFormat('ko-KR').format(
-                            (item.discountPrice || item.price) * item.quantity
-                          )}원
-                        </p>
+                        <span className="text-sm font-medium">
+                          {formatPrice(item.price)}
+                        </span>
                       </div>
                     </div>
                     <div className="flex-1 flex items-end justify-between text-sm mt-2">
@@ -132,7 +140,9 @@ export default function CartSidebar() {
         <div className="border-t border-gray-200 px-4 py-6">
           <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
             <p>총계</p>
-            <p>{new Intl.NumberFormat('ko-KR').format(totalAmount)}원</p>
+            <span className="text-lg font-bold">
+              {formatPrice(totalAmount)}
+            </span>
           </div>
           <Link
             to="/cart"

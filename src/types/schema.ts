@@ -8,6 +8,7 @@ export const COLLECTIONS = {
   POSTS: 'posts',
   CUSTOMER_PRICES: 'customerPrices',
   CUSTOMER_PRICE_HISTORY: 'customerPriceHistory',
+  ORDERS: 'orders',
 } as const;
 
 // 공통 필드 타입 정의
@@ -62,12 +63,7 @@ export interface Product extends BaseDocument {
   status: boolean;  // true: 사용, false: 미사용
   hsCode: string;  // HS Code
   origin: string;  // 원산지
-  discountPrices: Array<{
-    categoryId: string;
-    categoryName: string;
-    categoryLevel: number;
-    price: number;
-  }>;
+  weight: number;  // 무게
 }
 
 export interface ProductCategory extends BaseDocument {
@@ -145,4 +141,35 @@ export interface CustomerPriceHistory extends BaseDocument {
   userEmail: string;
   companyName: string;
   history: PriceHistoryItem[];
+}
+
+// 주문 상태 타입
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+
+// 주문 아이템 타입
+export interface OrderItem {
+  productId: string;
+  name: string;
+  price: number;
+  discountPrice?: number;
+  quantity: number;
+  imageUrl: string;
+  categoryName: string;
+}
+
+// 주문 타입
+export interface Order extends BaseDocument {
+  orderId: string;         // 주문 고유 번호
+  userId: string;          // 주문자 ID
+  userEmail: string;       // 주문자 이메일 
+  companyName: string;     // 회사명
+  items: OrderItem[];      // 주문 아이템 목록
+  totalAmount: number;     // 총 금액
+  status: OrderStatus;     // 주문 상태
+  shippingAddress?: string; // 배송 주소 
+  contactInfo?: string;    // 연락처
+  notes?: string;          // 주문 메모
+  paymentStatus?: 'pending' | 'paid' | 'failed'; // 결제 상태
+  paymentMethod?: string;  // 결제 방법
+  paymentId?: string;      // 결제 ID (Stripe 등의 외부 결제 시스템)
 } 

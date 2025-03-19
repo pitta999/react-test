@@ -69,7 +69,7 @@ export default function ProductManage() {
 
   // 정렬 아이콘 렌더링
   const renderSortIcon = (field: SortField) => {
-    if (sortConfig.field !== field) return '↕️';
+    if (sortConfig.field !== field) return '';
     return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
@@ -98,17 +98,43 @@ export default function ProductManage() {
         productList.push({ ...data, id: doc.id });
       });
       
-      // 카테고리별로 상품 분류 및 정렬
-      const sortedProducts = sortProducts(productList, sortConfig.field, sortConfig.direction);
+      // 카테고리별로 상품 분류
       const categorized: {[key: string]: Product[]} = {};
-      sortedProducts.forEach(product => {
+      productList.forEach(product => {
         if (!categorized[product.categoryName]) {
           categorized[product.categoryName] = [];
         }
         categorized[product.categoryName].push(product);
       });
-      setCategorizedProducts(categorized);
-      setProducts(sortedProducts);
+
+      // 각 카테고리 내에서 상품 정렬
+      const sortedCategorized: {[key: string]: Product[]} = {};
+      Object.keys(categorized).forEach(categoryName => {
+        sortedCategorized[categoryName] = sortProducts(
+          categorized[categoryName], 
+          sortConfig.field, 
+          sortConfig.direction
+        );
+      });
+
+      // 카테고리 순서 지정
+      const categoryOrder = ['dashcam', 'accessory', 'companion'];
+      const orderedCategories = Object.keys(sortedCategorized).sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+
+      const orderedCategorizedProducts: {[key: string]: Product[]} = {};
+      orderedCategories.forEach(categoryName => {
+        orderedCategorizedProducts[categoryName] = sortedCategorized[categoryName];
+      });
+
+      setCategorizedProducts(orderedCategorizedProducts);
+      setProducts(productList);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("상품 목록을 불러오는 중 오류가 발생했습니다.");
@@ -122,17 +148,20 @@ export default function ProductManage() {
     fetchProducts();
   }, []);
 
-  // 정렬 설정이 변경될 때마다 상품 목록 업데이트
+  // 정렬 설정이 변경될 때마다 카테고리별 상품 목록 업데이트
   useEffect(() => {
-    const sortedProducts = sortProducts(products, sortConfig.field, sortConfig.direction);
-    const categorized: {[key: string]: Product[]} = {};
-    sortedProducts.forEach(product => {
-      if (!categorized[product.categoryName]) {
-        categorized[product.categoryName] = [];
-      }
-      categorized[product.categoryName].push(product);
+    const sortedCategorized: {[key: string]: Product[]} = {};
+    
+    // 각 카테고리별로 정렬 적용
+    Object.keys(categorizedProducts).forEach(categoryName => {
+      sortedCategorized[categoryName] = sortProducts(
+        [...categorizedProducts[categoryName]], 
+        sortConfig.field, 
+        sortConfig.direction
+      );
     });
-    setCategorizedProducts(categorized);
+    
+    setCategorizedProducts(sortedCategorized);
   }, [sortConfig]);
 
 
@@ -201,7 +230,7 @@ export default function ProductManage() {
                   {categories[product.categoryId] || '카테고리 없음'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.price.toLocaleString()}원
+                  {product.price.toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {product.stock}

@@ -66,7 +66,12 @@ export default function ProductDetail() {
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
   };
 
   if (isLoading) {
@@ -98,7 +103,7 @@ export default function ProductDetail() {
           <div className="product-detail__item">
             <span className="product-detail__label">가격</span>
             <span className="product-detail__value product-detail__price">
-              {formatPrice(product.price)}원
+              {formatPrice(product.price)}
             </span>
           </div>
           
