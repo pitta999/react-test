@@ -118,7 +118,7 @@ export default function OrderComplete() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatPrice((item.discountPrice || item.price) * item.quantity)}
+                        {formatPrice(parseFloat(((item.discountPrice || item.price) * item.quantity).toFixed(2)))}
                       </td>
                     </tr>
                   ))}
@@ -129,7 +129,7 @@ export default function OrderComplete() {
             <div className="mt-8 border-t border-gray-200 pt-6">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">소계</span>
-                <span className="text-gray-900">{formatPrice(order.totalAmount)}</span>
+                <span className="text-gray-900">{formatPrice(parseFloat(order.totalAmount.toFixed(2)))}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">배송비</span>
@@ -137,7 +137,7 @@ export default function OrderComplete() {
               </div>
               <div className="flex justify-between font-medium">
                 <span className="text-gray-900">합계</span>
-                <span className="text-primary-600">{formatPrice(order.totalAmount)}</span>
+                <span className="text-primary-600">{formatPrice(parseFloat(order.totalAmount.toFixed(2)))}</span>
               </div>
             </div>
           </>

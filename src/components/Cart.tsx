@@ -195,7 +195,7 @@ export default function Cart() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formatPrice((item.discountPrice || item.price) * item.quantity)}
+                  {formatPrice(parseFloat(((item.discountPrice || item.price) * item.quantity).toFixed(2)))}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
@@ -215,7 +215,7 @@ export default function Cart() {
         <div className="flex justify-between items-center mb-6">
           <span className="text-lg font-medium text-gray-900">총 결제 금액</span>
           <span className="text-2xl font-bold text-primary-600">
-            {formatPrice(totalAmount)}
+            {formatPrice(parseFloat(totalAmount.toFixed(2)))}
           </span>
         </div>
         <div className="flex justify-end space-x-4">
