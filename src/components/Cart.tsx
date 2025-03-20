@@ -50,9 +50,7 @@ export default function Cart() {
       const randomString = Math.random().toString(36).substring(2, 8);
       const orderId = `ORD-${timestamp}-${randomString}`;
       
-      console.log('주문 생성 시작:', orderId);
-      console.log('사용자 ID:', user.uid);
-      console.log('사용자 이메일:', user.email);
+      
       
       // 주문 데이터 생성
       const orderData: Omit<Order, 'id'> = {

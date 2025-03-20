@@ -291,7 +291,12 @@ export default function AdminOrderDetail() {
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">회사명</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {order.companyName}
+                <Link
+                  to={`/users/${order.userId}`}
+                  className="text-primary-600 hover:text-primary-700"
+                >
+                  {order.companyName}
+                </Link>
               </dd>
             </div>
             {order.shippingAddress && (
@@ -325,7 +330,7 @@ export default function AdminOrderDetail() {
       <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
         <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg leading-6 font-medium text-gray-900">주문 상품</h3>
-          <p className="text-sm text-gray-500">상품 정보를 수정할 수 있습니다</p>
+          
         </div>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

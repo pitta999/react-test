@@ -2,16 +2,18 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from 'firebaseApp';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { COLLECTIONS, Order } from 'types/schema';
+import { COLLECTIONS, Order, User } from 'types/schema';
 import AuthContext from 'context/AuthContext';
 import Loader from '../Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
+import Invoice from './Invoice';
 
 export default function OrderDetail() {
   const { orderId } = useParams();
   const { user, isAdmin } = useContext(AuthContext);
   const [order, setOrder] = useState<Order | null>(null);
+  const [orderUser, setOrderUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
 
@@ -33,6 +35,13 @@ export default function OrderDetail() {
           }
           
           setOrder(orderData);
+
+          // 주문자의 사용자 정보 가져오기
+          const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, orderData.userId));
+          if (userDoc.exists()) {
+            const userData = { ...userDoc.data(), id: userDoc.id } as User;
+            setOrderUser(userData);
+          }
         } else {
           setOrder(null);
         }
@@ -328,7 +337,10 @@ export default function OrderDetail() {
           </div>
 
           {order.paymentStatus === 'pending' && (
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end space-x-4">
+              {orderUser && (
+                <Invoice order={order} user={orderUser} />
+              )}
               <button
                 onClick={handlePayment}
                 disabled={isInitiatingPayment}
@@ -338,7 +350,6 @@ export default function OrderDetail() {
               >
                 {isInitiatingPayment ? '처리 중...' : '결제하기'}
               </button>
-              
             </div>
           )}
         </div>

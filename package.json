@@ -13,6 +13,8 @@
     "@types/react-dom": "^19.0.0",
     "@types/react-router-dom": "^5.3.3",
     "firebase": "^11.4.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "4.10.1",
