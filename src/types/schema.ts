@@ -9,6 +9,7 @@ export const COLLECTIONS = {
   CUSTOMER_PRICES: 'customerPrices',
   CUSTOMER_PRICE_HISTORY: 'customerPriceHistory',
   ORDERS: 'orders',
+  PRODUCT_RELATIONSHIPS: 'productRelationships',
 } as const;
 
 // 공통 필드 타입 정의
@@ -174,4 +175,13 @@ export interface Order extends BaseDocument {
   paymentMethod?: string;  // 결제 방법
   paymentId?: string;      // 결제 ID (Stripe 등의 외부 결제 시스템)
   shippingCost?: number;   // 배송비
+}
+
+// 연관 상품 관계 타입
+export interface ProductRelationship extends BaseDocument {
+  sourceProductId: string;
+  targetProductId: string;
+  bidirectional: boolean;
+  sourceProduct?: Product;  // 조회 시 사용할 소스 상품 정보
+  targetProduct?: Product;  // 조회 시 사용할 타겟 상품 정보
 } 

@@ -295,6 +295,15 @@ export default function ProductManage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">상품 관리</h2>
+        <div className="flex space-x-2">
+
+        <Link
+          to="/products/relationship"
+          className="text-primary-600 hover:text-primary-900 flex items-center"
+        >
+          연관 상품
+        </Link>
+        <span>/</span>
         <Link
           to="/products/new"
           className="text-primary-600 hover:text-primary-900 flex items-center"
@@ -304,6 +313,7 @@ export default function ProductManage() {
           </svg>
           새 상품 등록
         </Link>
+        </div>
       </div>
 
       {Object.keys(categorizedProducts).map(categoryName => (

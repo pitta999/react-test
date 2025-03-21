@@ -31,6 +31,7 @@ import OrderHistory from "pages/order/history";
 import OrderDetail from "pages/order/detail";
 import AdminOrderList from "pages/order/listAdmin";
 import AdminOrderDetail from "pages/order/detailAdmin";
+import ProductRelationships from 'pages/products/manage/relationship';
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -133,6 +134,12 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route 
               path="/products/categories/edit/:categoryId" 
               element={isAdmin ? <EditProductCategoryPage /> : <Navigate replace to="/" />} 
+            />
+            
+            {/* 어드민 전용 상품 관계 관리 라우트 */}
+            <Route 
+              path="/products/relationship" 
+              element={isAdmin ? <ProductRelationships /> : <Navigate replace to="/" />} 
             />
             
             {/* 존재하지 않는 경로는 홈으로 리다이렉트 */}
