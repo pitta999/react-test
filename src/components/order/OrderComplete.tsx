@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { db } from 'firebaseApp';
 import { doc, getDoc } from 'firebase/firestore';
-import { COLLECTIONS, Order } from 'types/schema';
+import { COLLECTIONS, Order, User } from 'types/schema';
 import Loader from '../Loader';
+import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
+import { toast } from 'react-toastify';
+import Invoice from './Invoice';
 
 interface LocationState {
   orderId: string;
@@ -16,7 +19,10 @@ export default function OrderComplete() {
   const orderNumber = state?.orderId || '주문 번호 정보가 없습니다';
 
   const [order, setOrder] = useState<Order | null>(null);
+  const [orderUser, setOrderUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
+  const [shippingCost, setShippingCost] = useState(0);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -27,7 +33,22 @@ export default function OrderComplete() {
         const orderDoc = await getDoc(doc(db, COLLECTIONS.ORDERS, orderId));
         
         if (orderDoc.exists()) {
-          setOrder({ ...orderDoc.data(), id: orderDoc.id } as Order);
+          const orderData = { ...orderDoc.data(), id: orderDoc.id } as Order;
+          setOrder(orderData);
+
+          // 주문자의 사용자 정보 가져오기
+          const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, orderData.userId));
+          if (userDoc.exists()) {
+            const userData = { ...userDoc.data(), id: userDoc.id } as User;
+            setOrderUser(userData);
+          }
+
+          // CFR인 경우 DHL API로 운송료 계산 (임시 구현)
+          if (orderData.shippingTerms === 'CFR') {
+            // 임시로 주문 금액의 5%를 운송료로 설정
+            const tempShippingCost = orderData.totalAmount * 0.05;
+            setShippingCost(tempShippingCost);
+          }
         }
       } catch (error) {
         console.error('주문 정보를 불러오는 중 오류가 발생했습니다:', error);
@@ -48,6 +69,32 @@ export default function OrderComplete() {
     }).format(price);
   };
 
+  // Stripe 결제를 처리하는 함수
+  const handlePayment = async () => {
+    if (!order) return;
+    
+    try {
+      setIsInitiatingPayment(true);
+      
+      // 총 결제 금액 계산 (CFR인 경우 운송료 포함)
+      const totalAmount = order.shippingTerms === 'CFR' 
+        ? order.totalAmount + shippingCost 
+        : order.totalAmount;
+      
+      // Stripe 결제 세션 생성
+      const session = await createCheckoutSession(order.orderId, totalAmount);
+      
+      // Stripe 결제 페이지로 리다이렉트
+      await redirectToCheckout(session.id);
+      
+    } catch (error) {
+      console.error('결제 처리 중 오류가 발생했습니다:', error);
+      toast.error('결제 처리 중 오류가 발생했습니다. 나중에 다시 시도해주세요.');
+    } finally {
+      setIsInitiatingPayment(false);
+    }
+  };
+
   if (isLoading) {
     return <Loader />;
   }
@@ -55,13 +102,8 @@ export default function OrderComplete() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600 mb-5">
-          <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">주문이 완료되었습니다</h1>
-        <p className="text-gray-600">주문해주셔서 감사합니다. 주문 정보는 아래와 같습니다.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">결제 진행</h1>
+        <p className="text-gray-600">주문 정보를 확인하고 결제를 진행해주세요.</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -76,6 +118,21 @@ export default function OrderComplete() {
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
               결제 대기중
             </span>
+          </div>
+        </div>
+
+        {/* 배송지 정보 섹션 */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">배송지 정보</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">배송지</span>
+              <span className="text-gray-900">{order?.shippingAddress}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">운송조건</span>
+              <span className="text-gray-900">{order?.shippingTerms === 'FOB' ? 'FOB (무료)' : 'CFR (운송료 포함)'}</span>
+            </div>
           </div>
         </div>
 
@@ -133,11 +190,15 @@ export default function OrderComplete() {
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">배송비</span>
-                <span className="text-gray-900">$0.00</span>
+                <span className="text-gray-900">
+                  {order.shippingTerms === 'CFR' ? formatPrice(shippingCost) : '$0.00'}
+                </span>
               </div>
               <div className="flex justify-between font-medium">
                 <span className="text-gray-900">합계</span>
-                <span className="text-primary-600">{formatPrice(parseFloat(order.totalAmount.toFixed(2)))}</span>
+                <span className="text-primary-600">
+                  {formatPrice(parseFloat((order.totalAmount + (order.shippingTerms === 'CFR' ? shippingCost : 0)).toFixed(2)))}
+                </span>
               </div>
             </div>
           </>
@@ -145,22 +206,17 @@ export default function OrderComplete() {
       </div>
 
       <div className="text-center">
-        <p className="text-gray-600 mb-6">
-          주문과 관련된 자세한 정보는 주문 내역에서 확인할 수 있습니다.
-        </p>
         <div className="flex justify-center space-x-4">
-          <Link
-            to="/"
-            className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          {order && orderUser && <Invoice order={order} user={orderUser} />}
+          <button
+            onClick={handlePayment}
+            disabled={isInitiatingPayment}
+            className={`inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
+              isInitiatingPayment ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
+            }`}
           >
-            홈으로 이동
-          </Link>
-          <Link
-            to="/order-history"
-            className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700"
-          >
-            주문 내역 보기
-          </Link>
+            {isInitiatingPayment ? '처리 중...' : '결제하기'}
+          </button>
         </div>
       </div>
     </div>

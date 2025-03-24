@@ -172,7 +172,8 @@ export interface Order extends BaseDocument {
   subtotal: number;        // 소계 (배송비 제외한 금액)
   totalAmount: number;     // 총 금액
   status: OrderStatus;     // 주문 상태
-  shippingAddress?: string; // 배송 주소 
+  shippingAddress: string; // 배송 주소 
+  shippingTerms: 'FOB' | 'CFR'; // 운송 조건
   contactInfo?: string;    // 연락처
   notes?: string;          // 주문 메모
   paymentStatus?: 'pending' | 'paid' | 'failed'; // 결제 상태
