@@ -1,12 +1,12 @@
 import Footer from "components/Footer";
 import Header from "components/Header";
-import OrderComplete from "components/order/OrderComplete";
+import OrderConfirm from "components/order/OrderConfirm";
 
 export default function OrderCompletePage() {
   return (
     <>
       <Header />
-      <OrderComplete />
+      <OrderConfirm />
       <Footer />
     </>
   );

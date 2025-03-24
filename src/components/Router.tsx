@@ -26,7 +26,7 @@ import EditUserCategoryPage from "pages/users/categories/edit/[id]";
 import CartPage from "pages/cart";
 import UserCustomPrice from "pages/users/price";
 import UserPriceHistoryPage from "pages/users/price/history";
-import OrderComplete from "pages/order/complete";
+import OrderConfirm from "pages/order/confirm";
 import OrderHistory from "pages/order/history";
 import OrderDetail from "pages/order/detail";
 import AdminOrderList from "pages/order/listAdmin";
@@ -57,7 +57,7 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route path="/cart" element={<CartPage />} />
             
             {/* 주문 관련 라우트 */}
-            <Route path="/order-complete/:orderId" element={<OrderComplete />} />
+            <Route path="/order-confirm/:orderId" element={<OrderConfirm />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-detail/:orderId" element={isAuthenticated ? <OrderDetail /> : <Navigate replace to="/" />} />
             <Route path="/order-detail-admin/:orderId" element={isAdmin ? <AdminOrderDetail /> : <Navigate replace to="/" />} />

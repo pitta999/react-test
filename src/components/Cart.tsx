@@ -150,7 +150,7 @@ export default function Cart() {
       
       // 주문 완료 페이지로 이동
       toast.success(`주문이 완료되었습니다. 주문번호: ${orderId}`);
-      navigate(`/order-complete/${orderRef.id}`, { state: { orderId } });
+      navigate(`/order-confirm/${orderRef.id}`, { state: { orderId } });
       
     } catch (error) {
       console.error("주문 처리 중 오류가 발생했습니다:", error);
