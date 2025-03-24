@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Product, COLLECTIONS } from "types/schema";
 import Loader from "./Loader";
 
-type SortField = 'name' | 'category' | 'price' | 'stock' | 'stockStatus' | 'status' | 'createdAt';
+type SortField = 'name' | 'category' | 'price' | 'stock' | 'stockStatus' | 'status' | 'productionStatus';
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
@@ -20,8 +20,8 @@ export default function ProductManage() {
   const [categories, setCategories] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    field: 'createdAt',
-    direction: 'desc'
+    field: 'name',
+    direction: 'asc'
   });
 
   // 정렬 함수
@@ -48,8 +48,8 @@ export default function ProductManage() {
         case 'status':
           comparison = (a.status === b.status) ? 0 : a.status ? 1 : -1;
           break;
-        case 'createdAt':
-          comparison = a.createdAt.localeCompare(b.createdAt);
+        case 'productionStatus':
+          comparison = a.productionStatus.localeCompare(b.productionStatus);
           break;
         default:
           comparison = 0;
@@ -211,9 +211,9 @@ export default function ProductManage() {
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('createdAt')}
+                onClick={() => handleSort('productionStatus')}
               >
-                등록일 {renderSortIcon('createdAt')}
+                생산 상태 {renderSortIcon('productionStatus')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 작업
@@ -253,8 +253,17 @@ export default function ProductManage() {
                     {product.status ? '사용' : '미사용'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.createdAt}
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    product.productionStatus === 'inproduction'
+                      ? 'bg-green-100 text-green-800'
+                      : product.productionStatus === 'discontinued'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {product.productionStatus === 'inproduction' ? 'inproduction' :
+                     product.productionStatus === 'discontinued' ? 'discontinued' : 'out of sales'}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex space-x-2">

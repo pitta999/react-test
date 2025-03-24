@@ -6,7 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebas
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { ProductCategory, COLLECTIONS } from "types/schema";
+import { ProductCategory, COLLECTIONS, ProductionStatus } from "types/schema";
 import Loader from "./Loader";
 
 // 상품 카테고리 타입 정의
@@ -40,6 +40,7 @@ export default function ProductForm() {
   const [hsCode, setHsCode] = useState<string>("");  // HS Code
   const [origin, setOrigin] = useState<string>("KR");  // 원산지 (기본값: KR)
   const [weight, setWeight] = useState<number>(0);  // 무게 (기본값: 0)
+  const [productionStatus, setProductionStatus] = useState<ProductionStatus>('inproduction');
 
   // 카테고리 목록 불러오기
   useEffect(() => {
@@ -81,6 +82,7 @@ export default function ProductForm() {
             setHsCode(productData.hsCode || "");  // HS Code
             setOrigin(productData.origin || "KR");  // 원산지
             setWeight(productData.weight || 0);  // 무게
+            setProductionStatus(productData.productionStatus || 'inproduction');
           } else {
             toast.error("상품 정보를 찾을 수 없습니다.");
             navigate("/products");
@@ -237,6 +239,7 @@ export default function ProductForm() {
         hsCode,  // HS Code 추가
         origin,  // 원산지 추가
         weight: Number(weight),  // 무게 추가
+        productionStatus,
         imageUrl: productImageUrl,
         updatedAt: new Date().toLocaleString("ko-KR"),
         updatedBy: user?.email,
@@ -477,6 +480,23 @@ export default function ProductForm() {
           >
             <option value="true">사용</option>
             <option value="false">미사용</option>
+          </select>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="productionStatus" className="block text-sm font-medium text-gray-700 mb-2">
+            생산 상태
+          </label>
+          <select
+            id="productionStatus"
+            value={productionStatus}
+            onChange={(e) => setProductionStatus(e.target.value as ProductionStatus)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="inproduction">inproduction</option>
+            <option value="discontinued">discontinued</option>
+            <option value="out of sales">out of sales</option>
           </select>
         </div>
 

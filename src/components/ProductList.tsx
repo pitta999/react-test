@@ -275,8 +275,8 @@ export default function ProductList() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          </div>
-          
+      </div>
+
           <div className="p-6">
             <div className="flex flex-col md:flex-row gap-8">
               <div className="md:w-1/2">
@@ -501,17 +501,17 @@ export default function ProductList() {
     return (
       <>
         <tr key={product.id} className="hover:bg-gray-50">
-          <td className="w-2/5 px-6 py-4 whitespace-nowrap">
+          <td className="w-2/5 px-6 py-2 whitespace-nowrap">
             <div className="flex items-center">
-              <div className="h-10 w-10 flex-shrink-0">
-                <img className="h-10 w-10 rounded-full object-cover" src={product.imageUrl} alt={product.name} />
+              <div className="h-8 w-8 flex-shrink-0">
+                <img className="h-8 w-8 rounded-full object-cover" src={product.imageUrl} alt={product.name} />
               </div>
               <div className="ml-4">
                 <div className="text-sm font-medium text-gray-900">{product.name}</div>
               </div>
             </div>
           </td>
-          <td className="w-1/10 px-6 py-4 whitespace-nowrap">
+          <td className="w-1/10 px-6 py-2 whitespace-nowrap">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               product.stockStatus === 'ok' 
                 ? 'bg-green-100 text-green-800' 
@@ -520,10 +520,10 @@ export default function ProductList() {
               {product.stockStatus === 'ok' ? '정상' : '품절'}
             </span>
           </td>
-          <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
+          <td className="w-1/5 px-6 py-2 whitespace-nowrap text-right">
             <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
           </td>
-          <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
+          <td className="w-1/5 px-6 py-2 whitespace-nowrap text-right">
             {discountPrice ? (
               <div className="text-sm text-primary-600 font-semibold">
                 {formatPrice(discountPrice)}
@@ -535,7 +535,7 @@ export default function ProductList() {
               <div className="text-sm text-gray-500">-</div>
             )}
           </td>
-          <td className="w-1/10 px-6 py-4 whitespace-nowrap text-right">
+          <td className="w-1/10 px-6 py-2 whitespace-nowrap text-right">
             <input
               type="number"
               min="1"
@@ -544,12 +544,12 @@ export default function ProductList() {
               className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
             />
           </td>
-          <td className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
+          <td className="w-1/5 px-6 py-2 whitespace-nowrap text-right">
             <div className="text-sm font-semibold text-primary-600">
               {formatPrice(total)}
             </div>
           </td>
-          <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <td className="w-1/5 px-6 py-2 whitespace-nowrap text-sm font-medium">
             <button
               onClick={() => fetchProductDetail(product.id)}
               className="text-primary-600 hover:text-primary-900 mr-4"

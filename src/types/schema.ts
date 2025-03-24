@@ -51,6 +51,9 @@ export interface UserCategory extends BaseDocument {
   level: number;
 }
 
+// 생산 상태 타입 정의
+export type ProductionStatus = 'inproduction' | 'discontinued' | 'out of sales';
+
 // 상품 관련 타입 정의
 export interface Product extends BaseDocument {
   name: string;
@@ -65,6 +68,7 @@ export interface Product extends BaseDocument {
   hsCode: string;  // HS Code
   origin: string;  // 원산지
   weight: number;  // 무게
+  productionStatus: ProductionStatus;  // 생산 상태 추가
 }
 
 export interface ProductCategory extends BaseDocument {
