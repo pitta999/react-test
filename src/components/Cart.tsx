@@ -6,6 +6,7 @@ import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import AuthContext from 'context/AuthContext';
 import { COLLECTIONS, Order, OrderStatus } from 'types/schema';
+import AddressInput from 'components/common/AddressInput';
 
 declare global {
   interface Window {
@@ -21,8 +22,6 @@ export default function Cart() {
   const [addressType, setAddressType] = useState<'company' | 'new'>('company');
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingTerms, setShippingTerms] = useState<'FOB' | 'CFR'>('FOB');
-  const [autocomplete, setAutocomplete] = useState<any>(null);
-  const [autocompleteInput, setAutocompleteInput] = useState<HTMLInputElement | null>(null);
   const [userData, setUserData] = useState<any>(null);
 
   useEffect(() => {
@@ -41,36 +40,6 @@ export default function Cart() {
 
     fetchUserData();
   }, [user]);
-
-  useEffect(() => {
-    // Google Places API 스크립트 로드
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    script.onload = () => {
-      if (window.google && autocompleteInput) {
-        const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInput, {
-          types: ['address'],
-        });
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (place.formatted_address) {
-            setShippingAddress(place.formatted_address);
-          }
-        });
-
-        setAutocomplete(autocomplete);
-      }
-    };
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, [autocompleteInput]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -321,13 +290,9 @@ export default function Cart() {
                   <label htmlFor="shippingAddress" className="block text-sm font-medium text-gray-700">
                     배송지 주소
                   </label>
-                  <input
-                    ref={setAutocompleteInput}
-                    type="text"
-                    id="shippingAddress"
+                  <AddressInput
                     value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    onChange={setShippingAddress}
                     placeholder="주소를 입력하거나 선택해주세요"
                   />
                 </div>
