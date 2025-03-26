@@ -32,6 +32,7 @@ import OrderDetail from "pages/order/detail";
 import AdminOrderList from "pages/order/listAdmin";
 import AdminOrderDetail from "pages/order/detailAdmin";
 import ProductRelationships from 'pages/products/manage/relationship';
+import DhlApiTest from '../pages/DhlApiTest';
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -155,6 +156,7 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route path="*" element={<Navigate replace to="/login" />} />
           </>
         )}
+        <Route path="/dhl-test" element={<DhlApiTest />} />
       </Routes>
     </>
   );
