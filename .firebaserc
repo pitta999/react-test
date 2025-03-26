@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "b2b-oms-97a1e",
+    "staging": "b2b-oms-97a1e"
+  },
+  "targets": {},
+  "etags": {}
+}
