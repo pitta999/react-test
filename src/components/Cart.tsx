@@ -23,6 +23,12 @@ export default function Cart() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingTerms, setShippingTerms] = useState<'FOB' | 'CFR'>('FOB');
   const [userData, setUserData] = useState<any>(null);
+  const [newShippingInfo, setNewShippingInfo] = useState({
+    companyName: '',
+    contactName: '',
+    telNo: '',
+    mobNo: ''
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -31,7 +37,14 @@ export default function Cart() {
       try {
         const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
         if (userDoc.exists()) {
-          setUserData(userDoc.data());
+          const data = userDoc.data();
+          setUserData(data);
+          setNewShippingInfo({
+            companyName: data.fullCompanyName || '',
+            contactName: data.personInCharge?.name || '',
+            telNo: data.telNo || '',
+            mobNo: data.mobNo || ''
+          });
         }
       } catch (error) {
         console.error('사용자 정보를 불러오는 중 오류가 발생했습니다:', error);
@@ -48,6 +61,14 @@ export default function Cart() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(price);
+  };
+
+  const handleNewShippingInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setNewShippingInfo(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
   // 주문 처리 함수
@@ -267,8 +288,29 @@ export default function Cart() {
                 <span className="ml-2 text-sm text-gray-700">회사 주소 사용</span>
               </label>
               {addressType === 'company' && (
-                <div className="ml-4 p-1 bg-gray-50 rounded-md">
-                  <p className="text-sm text-gray-600">{userData?.companyAddress || '회사 주소 정보가 없습니다.'}</p>
+                <div className="ml-6 space-y-2 p-4 bg-gray-50 rounded-md">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">회사명</p>
+                      <p className="text-sm text-gray-600">{userData?.fullCompanyName || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">담당자</p>
+                      <p className="text-sm text-gray-600">{userData?.personInCharge?.name || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">전화번호</p>
+                      <p className="text-sm text-gray-600">{userData?.telNo || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">휴대폰</p>
+                      <p className="text-sm text-gray-600">{userData?.mobNo || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-700">주소</p>
+                    <p className="text-sm text-gray-600">{userData?.companyAddress || '-'}</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -286,15 +328,67 @@ export default function Cart() {
               </label>
               
               {addressType === 'new' && (
-                <div className="ml-6">
-                  <label htmlFor="shippingAddress" className="block text-sm font-medium text-gray-700">
-                    배송지 주소
-                  </label>
-                  <AddressInput
-                    value={shippingAddress}
-                    onChange={setShippingAddress}
-                    placeholder="주소를 입력하거나 선택해주세요"
-                  />
+                <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-md">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                        회사명
+                      </label>
+                      <input
+                        type="text"
+                        id="companyName"
+                        value={newShippingInfo.companyName}
+                        onChange={handleNewShippingInfoChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
+                        담당자
+                      </label>
+                      <input
+                        type="text"
+                        id="contactName"
+                        value={newShippingInfo.contactName}
+                        onChange={handleNewShippingInfoChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="telNo" className="block text-sm font-medium text-gray-700">
+                        전화번호
+                      </label>
+                      <input
+                        type="text"
+                        id="telNo"
+                        value={newShippingInfo.telNo}
+                        onChange={handleNewShippingInfoChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="mobNo" className="block text-sm font-medium text-gray-700">
+                        휴대폰
+                      </label>
+                      <input
+                        type="text"
+                        id="mobNo"
+                        value={newShippingInfo.mobNo}
+                        onChange={handleNewShippingInfoChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="shippingAddress" className="block text-sm font-medium text-gray-700">
+                      배송지 주소
+                    </label>
+                    <AddressInput
+                      value={shippingAddress}
+                      onChange={setShippingAddress}
+                      placeholder="주소를 입력하거나 선택해주세요"
+                    />
+                  </div>
                 </div>
               )}
             </div>

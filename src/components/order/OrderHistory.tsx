@@ -201,19 +201,12 @@ export default function OrderHistory() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap">
-                  {order.items.map((item) => (
-                    <div key={item.productId} className="mr-4 mb-4 flex items-center">
-                      <img 
-                        src={item.imageUrl} 
-                        alt={item.name} 
-                        className="h-10 w-10 rounded-full object-cover mr-2" 
-                      />
-                      <span className="text-sm text-gray-700">
-                        {item.name} ({item.quantity}개)
-                      </span>
-                    </div>
-                  ))}
+                <div className="mt-4">
+                  <p className="text-sm text-gray-700">
+                    {order.items[0]?.name}
+                    {order.items.length > 1 && ` 외 ${order.items.length - 1}개 상품`}
+                    {' '}(총 {order.items.reduce((total, item) => total + item.quantity, 0)}개)
+                  </p>
                 </div>
               </Link>
             </li>

@@ -1,106 +1,126 @@
 import React, { useState } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { toast } from 'react-toastify';
 
 interface ShippingRate {
-  productName: string;
   totalPrice: number;
-  totalPriceBreakdown: {
-    price: number;
-    currency: string;
-  };
+  currency: string;
+  deliveryTime: string;
+  error?: string;
 }
 
-interface RateResponse {
-  products: ShippingRate[];
-}
+export default function DhlApiTest() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [rateResult, setRateResult] = useState<ShippingRate | null>(null);
 
-const DhlApiTest: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [rates, setRates] = useState<ShippingRate[]>([]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+  const calculateShippingRate = async () => {
+    setIsLoading(true);
     try {
-      const functions = getFunctions();
-      const getDhlRates = httpsCallable(functions, "getDhlRates");
+      const credentials = btoa(`${process.env.REACT_APP_DHL_API_KEY}:${process.env.REACT_APP_DHL_API_SECRET}`);
+      console.log('Credentials:', credentials);
 
-      const requestData = {
-        requestedShipment: {
-          shipper: {
-            address: {
-              postalCode: "12345",
-              countryCode: "KR",
-            },
+      const myHeaders = new Headers();
+      myHeaders.append("content-type", "application/json");
+      myHeaders.append("X-API-KEY", "demo-key");
+
+      console.log('Headers:', Object.fromEntries(myHeaders.entries()));
+
+      const requestBody = {
+        customerDetails: {
+          shipperDetails: {
+            postalCode: "14800",
+            cityName: "Prague",
+            countryCode: "CZ",
+            addressLine1: "addres1"
           },
-          recipient: {
-            address: {
-              postalCode: "54321",
-              countryCode: "US",
-            },
-          },
-          packages: [
-            {
-              weight: 1.0,
-              dimensions: {
-                length: 10,
-                width: 10,
-                height: 10,
-              },
-            },
-          ],
+          receiverDetails: {
+            postalCode: "14800",
+            cityName: "Prague",
+            countryCode: "CZ",
+            addressLine1: "addres1"
+          }
         },
+        plannedShippingDateAndTime: new Date().toISOString(),
+        unitOfMeasurement: "metric",
+        packages: [
+          {
+            weight: 10.5,
+            dimensions: {
+              length: 25,
+              width: 35,
+              height: 15
+            }
+          }
+        ]
       };
 
-      const result = await getDhlRates(requestData);
-      const response = result.data as RateResponse;
-      setRates(response.products);
-    } catch (err) {
-      console.error("Error fetching rates:", err);
-      setError(err instanceof Error ? err.message : "배송비 계산 중 오류가 발생했습니다.");
+      const response = await fetch("https://api-mock.dhl.com/mydhlapi/rates", {
+        method: "POST",
+        headers: myHeaders,
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('Error data:', errorData);
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setRateResult({
+        totalPrice: data.products[0].totalPrice,
+        currency: data.products[0].currency,
+        deliveryTime: data.products[0].deliveryTime.toString()
+      });
+      
+    } catch (error) {
+      console.error('DHL API Error:', error);
+      toast.error(`배송비 계산 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+      setRateResult({
+        totalPrice: 0,
+        currency: '',
+        deliveryTime: '',
+        error: error instanceof Error ? error.message : '알 수 없는 오류'
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">DHL 배송비 계산 테스트</h1>
       
-      <form onSubmit={handleSubmit} className="mb-4">
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {loading ? "계산 중..." : "배송비 계산하기"}
-        </button>
-      </form>
+      <button
+        onClick={calculateShippingRate}
+        disabled={isLoading}
+        className={`px-4 py-2 rounded ${
+          isLoading 
+            ? 'bg-gray-400' 
+            : 'bg-blue-500 hover:bg-blue-600'
+        } text-white`}
+      >
+        {isLoading ? '계산 중...' : '배송비 계산'}
+      </button>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      {rates.length > 0 && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-2">계산 결과</h2>
-          <div className="grid gap-4">
-            {rates.map((rate, index) => (
-              <div key={index} className="border p-4 rounded">
-                <h3 className="font-medium">{rate.productName}</h3>
-                <p>가격: {rate.totalPrice} {rate.totalPriceBreakdown.currency}</p>
-              </div>
-            ))}
-          </div>
+      {rateResult && (
+        <div className="mt-4 p-4 border rounded">
+          {rateResult.error ? (
+            <div className="text-red-600">
+              <h3 className="font-bold">오류 발생</h3>
+              <p>{rateResult.error}</p>
+            </div>
+          ) : (
+            <>
+              <h3 className="font-bold">계산 결과</h3>
+              <p>배송비: {rateResult.totalPrice} {rateResult.currency}</p>
+              <p>예상 배송 시간: {rateResult.deliveryTime}</p>
+            </>
+          )}
         </div>
       )}
     </div>
   );
-};
-
-export default DhlApiTest;
+}

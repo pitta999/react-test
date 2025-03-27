@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { db } from 'firebaseApp';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { COLLECTIONS, Order, User } from 'types/schema';
 import Loader from '../Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
 import Invoice from './Invoice';
+import PaymentButtons from './PaymentButtons';
 
 interface LocationState {
   orderId: string;
@@ -92,6 +93,31 @@ export default function OrderComplete() {
       toast.error('결제 처리 중 오류가 발생했습니다. 나중에 다시 시도해주세요.');
     } finally {
       setIsInitiatingPayment(false);
+    }
+  };
+
+  // 주문 취소 함수 추가
+  const handleCancelOrder = async () => {
+    if (!order || order.status !== 'pending') return;
+
+    try {
+      await updateDoc(doc(db, COLLECTIONS.ORDERS, order.id), {
+        status: 'cancelled',
+        updatedAt: new Date().toISOString(),
+        updatedBy: order.userEmail || order.userId
+      });
+
+      // 주문 정보 다시 로드
+      const updatedOrderDoc = await getDoc(doc(db, COLLECTIONS.ORDERS, order.id));
+      if (updatedOrderDoc.exists()) {
+        const updatedOrderData = { ...updatedOrderDoc.data(), id: updatedOrderDoc.id } as Order;
+        setOrder(updatedOrderData);
+      }
+
+      toast.success('주문이 성공적으로 취소되었습니다.');
+    } catch (error) {
+      console.error('주문 취소 중 오류가 발생했습니다:', error);
+      toast.error('주문 취소 중 오류가 발생했습니다.');
     }
   };
 
@@ -205,20 +231,29 @@ export default function OrderComplete() {
         )}
       </div>
 
-      <div className="text-center">
-        <div className="flex justify-center space-x-4">
-          {order && orderUser && <Invoice order={order} user={orderUser} />}
-          <button
-            onClick={handlePayment}
-            disabled={isInitiatingPayment}
-            className={`inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white ${
-              isInitiatingPayment ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
-            }`}
-          >
-            {isInitiatingPayment ? '처리 중...' : '결제하기'}
-          </button>
+
+      {order && orderUser && order.status === 'pending' && (
+        <div className="mt-8 flex justify-between items-center">
+          <div className="flex space-x-4">
+            <Invoice order={order} user={orderUser} />
+          </div>
+          <div className="flex space-x-4">
+            <button
+              onClick={handleCancelOrder}
+              className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              주문 취소
+            </button>
+            <PaymentButtons 
+              order={order} 
+              userId={order.userId} 
+              userEmail={order.userEmail}
+              onOrderUpdate={(updatedOrder) => setOrder(updatedOrder)}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
+
   );
 } 
