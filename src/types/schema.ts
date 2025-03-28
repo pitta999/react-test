@@ -10,6 +10,7 @@ export const COLLECTIONS = {
   CUSTOMER_PRICE_HISTORY: 'customerPriceHistory',
   ORDERS: 'orders',
   PRODUCT_RELATIONSHIPS: 'productRelationships',
+  MY_INFO: 'myInfo',
 } as const;
 
 // 공통 필드 타입 정의
@@ -54,6 +55,12 @@ export interface UserCategory extends BaseDocument {
 // 생산 상태 타입 정의
 export type ProductionStatus = 'inproduction' | 'discontinued' | 'out of sales';
 
+// 상품 그룹 타입 정의
+export interface ProductGroup extends BaseDocument {
+  name: string;
+  description: string;
+}
+
 // 상품 관련 타입 정의
 export interface Product extends BaseDocument {
   name: string;
@@ -61,6 +68,8 @@ export interface Product extends BaseDocument {
   description: string;
   categoryId: string;
   categoryName: string;
+  groupId: string;
+  groupName: string;
   stock: number;
   stockStatus: 'ok' | 'nok';
   imageUrl: string;
@@ -172,8 +181,15 @@ export interface Order extends BaseDocument {
   subtotal: number;        // 소계 (배송비 제외한 금액)
   totalAmount: number;     // 총 금액
   status: OrderStatus;     // 주문 상태
-  shippingAddress: string; // 배송 주소 
   shippingTerms: 'FOB' | 'CFR'; // 운송 조건
+  shipTo: {               // 배송지 정보
+    companyName: string;  // 회사명
+    contactName: string;  // 담당자
+    telNo: string;       // 전화번호
+    mobNo: string;       // 휴대폰
+    address: string;     // 주소
+    email: string;       // 이메일
+  };
   contactInfo?: string;    // 연락처
   notes?: string;          // 주문 메모
   paymentStatus?: 'pending' | 'paid' | 'failed'; // 결제 상태
@@ -189,4 +205,35 @@ export interface ProductRelationship extends BaseDocument {
   bidirectional: boolean;
   sourceProduct?: Product;  // 조회 시 사용할 소스 상품 정보
   targetProduct?: Product;  // 조회 시 사용할 타겟 상품 정보
+}
+
+// 회사 정보 타입 정의
+export interface MyInfo extends BaseDocument {
+  companyName: string;        // 회사명
+  tradingName: string;        // 거래명
+  businessNumber: string;     // 사업자등록번호
+  address: string;           // 회사 주소
+  telNo: string,
+  faxNo: string,
+  contactInfo: {
+    name: string;           // 담당자명
+    title: string;          // 직위
+    telNo: string;         // 전화번호
+    mobNo: string;         // 휴대폰
+    email: string;         // 이메일
+  };
+  bankInfo: {
+    bankName: string;      // 은행명
+    accountNumber: string; // 계좌번호
+    accountHolder: string; // 예금주
+    swiftCode: string;     // SWIFT CODE
+  };
+  shippingInfo: {
+    origin: string;        // 원산지
+    shipment: string;      // 배송 조건
+    packing: string;       // 포장 조건
+    validity: string;      // 유효기간
+  };
+  logoUrl?: string;        // 회사 로고 URL
+  description?: string;    // 회사 설명
 } 

@@ -6,6 +6,7 @@ import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
 import Loader from "./Loader";
+import { sendPasswordResetEmailToUser } from "utils/firebase";
 
 interface UserDetailType {
   uid: string;
@@ -40,6 +41,7 @@ export default function UserDetail() {
   const auth = getAuth(app);
   const [userData, setUserData] = useState<UserDetailType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isResettingPassword, setIsResettingPassword] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -114,6 +116,24 @@ export default function UserDetail() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!userData?.email) return;
+
+    const confirmed = window.confirm(`'${userData.email}' 사용자에게 비밀번호 재설정 이메일을 발송하시겠습니까?`);
+    if (!confirmed) return;
+
+    setIsResettingPassword(true);
+    try {
+      await sendPasswordResetEmailToUser(userData.email);
+      toast.success("비밀번호 재설정 이메일이 발송되었습니다.");
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      toast.error("비밀번호 재설정 이메일 발송 중 오류가 발생했습니다.");
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   if (isLoading) {
     return <Loader />;
   }
@@ -141,6 +161,25 @@ export default function UserDetail() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">사용자 상세 정보</h2>
+        <div className="flex space-x-4">
+          <button
+            onClick={handleResetPassword}
+            disabled={isResettingPassword}
+            className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-md ${
+              isResettingPassword 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-primary-600 hover:bg-primary-700'
+            }`}
+          >
+            {isResettingPassword ? '처리 중...' : '비밀번호 재설정'}
+          </button>
+          <Link
+            to="/users"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            목록으로 돌아가기
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -235,15 +274,6 @@ export default function UserDetail() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="mt-6">
-        <Link
-          to="/users"
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-        >
-          사용자 목록으로 돌아가기
-        </Link>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import AuthContext from "context/AuthContext";
 import { useCart } from "context/CartContext";
 
 export default function Header() {
-  const { user, isAdmin } = useContext(AuthContext);
+  const { user, isAdmin, isSuperAdmin } = useContext(AuthContext);
   const { totalItems } = useCart();
 
   console.log("Header - isAdmin:", isAdmin, "user:", user); // 디버깅용
@@ -14,7 +14,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <nav className="flex items-center justify-between">
           <Link to="/" className="text-xl font-bold text-gray-900 hover:text-primary-600">
-          B2B Order Portal
+            B2B Order Portal
           </Link>
           
           <div className="flex items-center space-x-6">
@@ -43,6 +43,14 @@ export default function Header() {
                       주문내역
                     </Link>
                   </>
+                )}
+                {isSuperAdmin && (
+                  <Link
+                    to="/my-info"
+                    className="text-red-600 hover:text-red-700 font-medium"
+                  >
+                    회사 정보
+                  </Link>
                 )}
                 <Link to="/posts" className="text-gray-600 hover:text-gray-900">
                   게시글

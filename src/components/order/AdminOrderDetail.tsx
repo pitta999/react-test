@@ -283,38 +283,31 @@ export default function AdminOrderDetail() {
         <div className="border-t border-gray-200">
           <dl>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">이메일</dt>
+              <dt className="text-sm font-medium text-gray-500">주문자 정보</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {order.userEmail}
+                <div className="space-y-1">
+                  <p>회사명: {order.companyName}</p>
+                  <p>담당자: {order.shipTo.contactName}</p>
+                  <p>이메일: {order.userEmail}</p>
+                  <p>전화번호: {order.shipTo.telNo}</p>
+                  <p>휴대폰: {order.shipTo.mobNo}</p>
+                  <p>주소: {order.shipTo.address}</p>
+                </div>
               </dd>
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">회사명</dt>
+              <dt className="text-sm font-medium text-gray-500">배송지 정보</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                <Link
-                  to={`/users/${order.userId}`}
-                  className="text-primary-600 hover:text-primary-700"
-                >
-                  {order.companyName}
-                </Link>
+                <div className="space-y-1">
+                  <p>회사명: {order.shipTo.companyName}</p>
+                  <p>담당자: {order.shipTo.contactName}</p>
+                  <p>전화번호: {order.shipTo.telNo}</p>
+                  <p>휴대폰: {order.shipTo.mobNo}</p>
+                  <p>이메일: {order.shipTo.email}</p>
+                  <p>주소: {order.shipTo.address}</p>
+                </div>
               </dd>
             </div>
-            {order.shippingAddress && (
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">배송 주소</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.shippingAddress}
-                </dd>
-              </div>
-            )}
-            {order.contactInfo && (
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">연락처</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.contactInfo}
-                </dd>
-              </div>
-            )}
             {order.notes && (
               <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">주문 메모</dt>

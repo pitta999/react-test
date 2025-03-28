@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Order, User } from 'types/schema';
+import { Order, User, MyInfo } from 'types/schema';
 import { notoSansKrRegular } from 'jspdf-font';
 
 interface InvoiceProps {
   order: Order;
   user: User;
+  myInfo: MyInfo;
 }
 
-export default function Invoice({ order, user }: InvoiceProps) {
+export default function Invoice({ order, user, myInfo }: InvoiceProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
@@ -54,7 +55,7 @@ export default function Invoice({ order, user }: InvoiceProps) {
         <td>
           <b>Ship to</b><br>
           ${user.fullCompanyName}<br>
-          ${order.shippingAddress}<br>
+          
           ${user.personInCharge.name}<br>
           ${user.telNo}<br>
           ${user.email}
@@ -68,7 +69,14 @@ export default function Invoice({ order, user }: InvoiceProps) {
     `;
 
     autoTable(doc, {
-      html: htmlTable,
+      body: [
+        [{ content: 'PROFORMA INVOICE', styles: { fontStyle: 'bold' } }, 
+         { content: `Invoice No : 111111\nDate : ${new Date().toLocaleDateString()}` }],
+        [{ content: 'Shipper/Exporter', styles: { fontStyle: 'bold' } }, 
+         { content: 'Sold to / Bill to', styles: { fontStyle: 'bold' } }],
+        [{ content: `Pittasoft Co. Ltd.\nAddress : (13488)...` }, 
+         { content: `${user.fullCompanyName}\n${user.companyAddress}...` }]
+      ],
       startY: 30,
       theme: 'grid',
       headStyles: { fillColor: [41, 128, 185] },

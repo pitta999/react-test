@@ -27,7 +27,8 @@ export default function Cart() {
     companyName: '',
     contactName: '',
     telNo: '',
-    mobNo: ''
+    mobNo: '',
+    email: ''
   });
 
   useEffect(() => {
@@ -43,7 +44,8 @@ export default function Cart() {
             companyName: data.fullCompanyName || '',
             contactName: data.personInCharge?.name || '',
             telNo: data.telNo || '',
-            mobNo: data.mobNo || ''
+            mobNo: data.mobNo || '',
+            email: data.email || ''
           });
         }
       } catch (error) {
@@ -99,10 +101,31 @@ export default function Cart() {
       
       const userData = userDoc.data();
       
-      // 주문 번호 생성 (현재 시간 + 랜덤 문자열)
-      const timestamp = new Date().getTime();
-      const randomString = Math.random().toString(36).substring(2, 8);
-      const orderId = `ORD-${timestamp}-${randomString}`;
+      // 주문 번호 생성 (년월일-시간분초-랜덤스트링2개)
+      const now = new Date();
+      const dateStr = now.toISOString().slice(2, 10).replace(/-/g, '');
+      const timeStr = now.toTimeString().slice(0, 6).replace(/:/g, '');
+      const randomStr = Math.random().toString(36).substring(2, 4);
+      const orderId = `ORD-${dateStr}-${timeStr}-${randomStr}`;
+      
+      // 배송지 정보 설정
+      const shipTo = addressType === 'company' 
+        ? {
+            companyName: userData.fullCompanyName || '',
+            contactName: userData.personInCharge?.name || '',
+            telNo: userData.telNo || '',
+            mobNo: userData.mobNo || '',
+            address: userData.companyAddress || '',
+            email: userData.email || ''
+          }
+        : {
+            companyName: newShippingInfo.companyName,
+            contactName: newShippingInfo.contactName,
+            telNo: newShippingInfo.telNo,
+            mobNo: newShippingInfo.mobNo,
+            address: shippingAddress,
+            email: newShippingInfo.email
+          };
       
       // 주문 데이터 생성
       const orderData: Omit<Order, 'id'> = {
@@ -123,8 +146,8 @@ export default function Cart() {
         totalAmount,
         status: 'pending' as OrderStatus,
         paymentStatus: 'pending',
-        shippingAddress: addressType === 'company' ? userData.companyAddress : shippingAddress,
         shippingTerms,
+        shipTo,
         createdAt: new Date().toISOString(),
         createdBy: user.email || user.uid
       };
@@ -306,6 +329,10 @@ export default function Cart() {
                       <p className="text-sm font-medium text-gray-700">휴대폰</p>
                       <p className="text-sm text-gray-600">{userData?.mobNo || '-'}</p>
                     </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">이메일</p>
+                      <p className="text-sm text-gray-600">{userData?.email || '-'}</p>
+                    </div>
                   </div>
                   <div className="mt-2">
                     <p className="text-sm font-medium text-gray-700">주소</p>
@@ -374,6 +401,18 @@ export default function Cart() {
                         type="text"
                         id="mobNo"
                         value={newShippingInfo.mobNo}
+                        onChange={handleNewShippingInfoChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        이메일
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        value={newShippingInfo.email}
                         onChange={handleNewShippingInfoChange}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                       />

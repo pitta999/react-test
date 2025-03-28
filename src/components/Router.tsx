@@ -9,6 +9,7 @@ import PostEdit from "pages/posts/edit";
 import ProfilePage from "pages/profile";
 import LoginPage from "pages/login";
 import SignupPage from "pages/signup";
+import ForgotPassword from "components/ForgotPassword";
 import UserList from "pages/users";
 import UserDetail from "pages/users/detail";
 import UserForm from "pages/users/form";
@@ -32,7 +33,10 @@ import OrderDetail from "pages/order/detail";
 import AdminOrderList from "pages/order/listAdmin";
 import AdminOrderDetail from "pages/order/detailAdmin";
 import ProductRelationships from 'pages/products/manage/relationship';
-import DhlApiTest from '../pages/DhlApiTest';
+import DhlApiTest from 'pages/DhlApiTest';
+import ProductGroupList from "pages/products/group/grouplist";
+import ProductGroupForm from "pages/products/group/groupform";
+import MyInfoForm from "pages/admin/myinfo";
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -143,6 +147,26 @@ export default function Router({ isAuthenticated }: RouterProps) {
               element={isAdmin ? <ProductRelationships /> : <Navigate replace to="/" />} 
             />
             
+            {/* 어드민 전용 상품 그룹 라우트 */}
+            <Route 
+              path="/groups" 
+              element={isAdmin ? <ProductGroupList /> : <Navigate replace to="/" />} 
+            />
+            <Route 
+              path="/groups/new" 
+              element={isAdmin ? <ProductGroupForm /> : <Navigate replace to="/" />} 
+            />
+            <Route 
+              path="/groups/edit/:groupId" 
+              element={isAdmin ? <ProductGroupForm /> : <Navigate replace to="/" />} 
+            />
+            
+            {/* 슈퍼 어드민 전용 회사 정보 관리 라우트 */}
+            <Route 
+              path="/my-info" 
+              element={isSuperAdmin ? <MyInfoForm /> : <Navigate replace to="/" />} 
+            />
+            
             {/* 존재하지 않는 경로는 홈으로 리다이렉트 */}
             <Route path="*" element={<Navigate replace to="/" />} />
           </>
@@ -151,6 +175,7 @@ export default function Router({ isAuthenticated }: RouterProps) {
             {/* 비로그인 상태에서 접근 가능한 라우트 */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* 비로그인 상태에서는 모든 경로를 로그인 페이지로 리다이렉트 */}
             <Route path="*" element={<Navigate replace to="/login" />} />

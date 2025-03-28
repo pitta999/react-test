@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from 'firebaseApp';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { COLLECTIONS, Order, User } from 'types/schema';
+import { COLLECTIONS, MyInfo, Order, User } from 'types/schema';
 import AuthContext from 'context/AuthContext';
 import Loader from '../Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
@@ -17,7 +17,7 @@ export default function OrderDetail() {
   const [orderUser, setOrderUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
-
+  const [myInfo, setMyInfo] = useState<MyInfo | null>(null);
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!orderId) return;
@@ -42,6 +42,13 @@ export default function OrderDetail() {
           if (userDoc.exists()) {
             const userData = { ...userDoc.data(), id: userDoc.id } as User;
             setOrderUser(userData);
+          }
+
+          // myInfo 데이터 가져오기
+          const myInfoDoc = await getDoc(doc(db, COLLECTIONS.MY_INFO, 'company'));
+          if (myInfoDoc.exists()) {
+            const myInfoData = { ...myInfoDoc.data(), id: myInfoDoc.id } as MyInfo;
+            setMyInfo(myInfoData);
           }
         } else {
           setOrder(null);
@@ -243,33 +250,31 @@ export default function OrderDetail() {
         <div className="border-t border-gray-200">
           <dl>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">이메일</dt>
+              <dt className="text-sm font-medium text-gray-500">주문자 정보</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {order.userEmail}
+                <div className="space-y-1">
+                  <p>회사명: {orderUser?.fullCompanyName}</p>
+                  <p>담당자: {orderUser?.personInCharge.name}</p>
+                  <p>이메일: {orderUser?.email}</p>
+                  <p>전화번호: {orderUser?.telNo}</p>
+                  <p>휴대폰: {orderUser?.mobNo}</p>
+                  <p>주소: {orderUser?.companyAddress}</p>
+                </div>
               </dd>
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">회사명</dt>
+              <dt className="text-sm font-medium text-gray-500">배송지 정보</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {order.companyName}
+                <div className="space-y-1">
+                  <p>회사명: {order.shipTo.companyName}</p>
+                  <p>담당자: {order.shipTo.contactName}</p>
+                  <p>전화번호: {order.shipTo.telNo}</p>
+                  <p>휴대폰: {order.shipTo.mobNo}</p>
+                  <p>이메일: {order.shipTo.email}</p>
+                  <p>주소: {order.shipTo.address}</p>
+                </div>
               </dd>
             </div>
-            {order.shippingAddress && (
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">배송 주소</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.shippingAddress}
-                </dd>
-              </div>
-            )}
-            {order.contactInfo && (
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">연락처</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.contactInfo}
-                </dd>
-              </div>
-            )}
             {order.notes && (
               <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">주문 메모</dt>
@@ -366,8 +371,8 @@ export default function OrderDetail() {
       {order.paymentStatus === 'pending' && order.status === 'pending' && (
         <div className="mt-6 flex justify-between items-center">
           <div className="flex space-x-4">
-            {orderUser && (
-              <Invoice order={order} user={orderUser} />
+            {orderUser && myInfo && (
+              <Invoice order={order} user={orderUser} myInfo={myInfo} />
             )}
           </div>
           <div className="flex space-x-4">

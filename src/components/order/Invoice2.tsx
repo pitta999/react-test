@@ -1,14 +1,15 @@
 import React, { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Order, User } from 'types/schema';
+import { Order, User, MyInfo } from 'types/schema';
 
 interface InvoiceProps {
   order: Order;
   user: User;
+  myInfo: MyInfo;
 }
 
-export default function Invoice({ order, user }: InvoiceProps) {
+export default function Invoice({ order, user, myInfo }: InvoiceProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
@@ -76,18 +77,20 @@ export default function Invoice({ order, user }: InvoiceProps) {
     }
   };
 
-  // 셀 공통 스타일
+  // 셀 공통 스타일 - 상단 정렬로 변경
   const cellStyle = {
-    padding: "3px 5px", // 상하 3px, 좌우 5px로 축소
+    padding: "4px 8px", // 패딩 조정 (상하 패딩 감소)
     border: "1px solid #ddd",
-    fontSize: "12px", // 글자 크기 축소
-    lineHeight: "1.2" // 줄 간격 축소
+    fontSize: "12px",
+    lineHeight: "1.3", // 줄 간격 조정
+    verticalAlign: "top" // 상단 정렬로 변경
   };
 
-  // div 스타일 - 간격 최소화
+  // div 스타일 - 간격 조정
   const divStyle = {
     margin: "0",
-    padding: "0"
+    padding: "0", // 패딩 제거
+    lineHeight: "1.3" // 컨시스턴트한 줄 간격
   };
 
   // 헤더 셀 스타일
@@ -96,19 +99,20 @@ export default function Invoice({ order, user }: InvoiceProps) {
     backgroundColor: "#2980b9",
     color: "white",
     fontWeight: "bold",
-    padding: "3px 5px" // 헤더도 패딩 축소
+    padding: "4px 8px" // 패딩 일관성 유지
   };
 
   // 빈 셀 스타일
   const emptyCellStyle = {
     ...cellStyle,
-    padding: "0" // 빈 셀은 패딩 제거
+    padding: "2px" // 빈 셀 최소 패딩 설정
   };
 
   // 볼드 텍스트 스타일
   const boldTextStyle = {
-    ...cellStyle,
-    fontWeight: "bold"
+    ...divStyle,
+    fontWeight: "bold",
+    marginBottom: "2px" // 헤더와 콘텐츠 사이 약간의 간격 추가
   };
 
 
@@ -135,51 +139,52 @@ export default function Invoice({ order, user }: InvoiceProps) {
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         <div ref={invoiceRef} className="bg-white p-8" style={{ width: "800px", fontFamily: "Arial, sans-serif" }}>
           {/* 인보이스 헤더 */}
-          <div style={{ textAlign: "center", marginBottom: "10px" }}>
+          <div style={{ textAlign: "center", marginBottom: "15px" }}>
             <div><img src="/images/blackvue-logo-re.png" alt="logo" style={{ width: "200px" }} /></div>
           </div>
 
           {/* 회사 및 고객 정보 */}
-          <table style={{width: "100%",borderCollapse: "collapse"}}>
+          <table style={{width: "100%", borderCollapse: "collapse", marginBottom: "15px"}}>
             <tbody>
               <tr>
                 <td style={cellStyle}>
-                  <div style={divStyle}>PROFORMA INVOICE</div>
+                  <div style={boldTextStyle}>PROFORMA INVOICE</div>
                 </td>
                 <td style={cellStyle}>
-                  <div style={boldTextStyle}>Invoice No : 111111</div>
-                  <div style={boldTextStyle}>Date : {new Date().toLocaleDateString()}</div>
+                  <div style={divStyle}>Invoice No : {order.orderId}</div>
+                  <div style={divStyle}>Date : {order.updatedAt ? new Date(order.updatedAt).toLocaleDateString() : ''}</div>
                 </td>
               </tr>
               <tr>
                 <td style={cellStyle}>
-                  <div style={divStyle}><b>Shipper/Exporter</b></div>
-                  <div style={divStyle}>Pittasoft Co. Ltd.</div>
-                  <div style={divStyle}>Address : (13488) ABN Tower 4f, 331, Pangyo-ro, Bundang-gu, Seongnam-si, Gyeonggi-do, Republic of Korea</div>
-                  <div style={divStyle}>Tel : +82-31-8039-7789</div>
-                  <div style={divStyle}>Fax : +82-31-8039-5253</div>
-                  <div style={divStyle}>Email : info@pittasoft.com</div>
+                  <div style={boldTextStyle}>Shipper/Exporter</div>
+                  <div style={divStyle}>{myInfo.companyName}</div>
+                  <div style={divStyle}>Address : {myInfo.address}</div>
+                  <div style={divStyle}>Tel : {myInfo.telNo}</div>
+                  <div style={divStyle}>Fax : {myInfo.faxNo}</div>
+                  <div style={divStyle}>Email : {myInfo.contactInfo.email}</div>
                 </td>
                 <td style={cellStyle}>
-                  <div style={divStyle}><b>Sold to / Bill to</b></div>
+                  <div style={boldTextStyle}>Sold to / Bill to</div>
                   <div style={divStyle}>{user.fullCompanyName}</div>
                   <div style={divStyle}>{user.companyAddress}</div>
                   <div style={divStyle}>{user.personInCharge.name}</div>
-                  <div style={divStyle}>{user.telNo}</div>
-                  <div style={divStyle}>{user.email}</div>
+                  <div style={divStyle}>Tel : {user.telNo}</div>
+                  <div style={divStyle}>Email : {user.email}</div>
                 </td>
               </tr>
               <tr>
                 <td style={cellStyle}>
-                  <div style={divStyle}><b>Ship to</b></div>
-                  <div style={divStyle}>{user.fullCompanyName}</div>
-                  <div style={divStyle}>{order.shippingAddress}</div>
-                  <div style={divStyle}>{user.personInCharge.name}</div>
-                  <div style={divStyle}>{user.telNo}</div>
-                  <div style={divStyle}>{user.email}</div>
+                  <div style={boldTextStyle}>Ship to</div>
+                  <div style={divStyle}>{order.shipTo.companyName}</div>
+                  <div style={divStyle}>{order.shipTo.address}</div>
+                  <div style={divStyle}>{order.shipTo.contactName}</div>
+                  <div style={divStyle}>Tel : {order.shipTo.telNo}</div>
+                  <div style={divStyle}>Mobile : {order.shipTo.mobNo}</div>
+                  <div style={divStyle}>Email : {order.shipTo.email}</div>
                 </td>
                 <td style={cellStyle}>
-                  <div style={divStyle}><b>Terms and conditions</b></div>
+                  <div style={boldTextStyle}>Terms and conditions</div>
                   <div style={divStyle}>Payment Terms : ????????????????</div>
                   <div style={divStyle}>Terms of Price : {order.shippingTerms === 'FOB' ? 'FOB' : 'CFR'}</div>
                 </td>
@@ -188,14 +193,21 @@ export default function Invoice({ order, user }: InvoiceProps) {
           </table>
 
           {/* 주문 항목 테이블 */}
-          <table style={{width: "100%",borderCollapse: "collapse", marginBottom: "20px"}}>
+          <table style={{width: "100%", borderCollapse: "collapse", marginBottom: "20px"}}>
             <thead>
               <tr>
-                <th style={{...headerCellStyle, width: "35%"}}>Item</th>
-                <th style={{...headerCellStyle, width: "20%"}}>Category</th>
-                <th style={{...headerCellStyle, width: "15%"}}>Price</th>
-                <th style={{...headerCellStyle, width: "15%"}}>Quantity</th>
-                <th style={{...headerCellStyle, width: "15%"}}>Total</th>
+                <th rowSpan={2} style={{...headerCellStyle, width: "35%"}}>Item</th>
+                <th rowSpan={2} style={{...headerCellStyle, width: "20%"}}>Category</th>
+                <th rowSpan={2} style={{...headerCellStyle, width: "15%"}}>Hscode</th>
+                <th rowSpan={2} style={{...headerCellStyle, width: "15%"}}>Origin</th>
+                <th style={{...headerCellStyle, width: "15%"}}>QTY</th>
+                <th style={{...headerCellStyle, width: "15%"}}>UNIT</th>
+                <th style={{...headerCellStyle, width: "15%"}}>AMOUNT</th>
+              </tr>
+              <tr>
+                <th style={{...headerCellStyle, width: "15%"}}>PCS</th>
+                <th style={{...headerCellStyle, width: "15%"}}>USD</th>
+                <th style={{...headerCellStyle, width: "15%"}}>USD</th>
               </tr>
             </thead>
             <tbody>
@@ -209,18 +221,18 @@ export default function Invoice({ order, user }: InvoiceProps) {
                 </tr>
               ))}
               <tr>
-                <td colSpan={3} style={{...cellStyle, padding: "0"}}></td>
-                <td style={{...cellStyle, fontWeight: "bold"}}>Subtotal:</td>
+                <td colSpan={3} style={emptyCellStyle}></td>
+                <td style={{...cellStyle, fontWeight: "bold", textAlign: "right"}}>Subtotal:</td>
                 <td style={cellStyle}>${order.subtotal.toFixed(2)}</td>
               </tr>
               <tr>
-                <td colSpan={3} style={{...cellStyle, padding: "0"}}></td>
-                <td style={{...cellStyle, fontWeight: "bold"}}>Shipping:</td>
+                <td colSpan={3} style={emptyCellStyle}></td>
+                <td style={{...cellStyle, fontWeight: "bold", textAlign: "right"}}>Shipping:</td>
                 <td style={cellStyle}>${order.shippingCost?.toFixed(2) || '0.00'}</td>
               </tr>
               <tr>
-                <td colSpan={3} style={{...cellStyle, padding: "0"}}></td>
-                <td style={{...cellStyle, fontWeight: "bold"}}>Total:</td>
+                <td colSpan={3} style={emptyCellStyle}></td>
+                <td style={{...cellStyle, fontWeight: "bold", textAlign: "right"}}>Total:</td>
                 <td style={{...cellStyle, fontWeight: "bold"}}>${order.totalAmount.toFixed(2)}</td>
               </tr>
             </tbody>
@@ -228,9 +240,9 @@ export default function Invoice({ order, user }: InvoiceProps) {
 
           {/* 주문 메모 */}
           {order.notes && (
-            <div style={{ marginTop: "20px" }}>
-              <h3 style={{ fontSize: "16px", marginBottom: "5px" }}>Notes:</h3>
-              <p style={{ fontSize: "14px" }}>{order.notes}</p>
+            <div style={{ marginTop: "15px" }}>
+              <h3 style={{ fontSize: "14px", marginBottom: "4px", fontWeight: "bold" }}>Notes:</h3>
+              <p style={{ fontSize: "12px", lineHeight: "1.3", margin: 0 }}>{order.notes}</p>
             </div>
           )}
         </div>

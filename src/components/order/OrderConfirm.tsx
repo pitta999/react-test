@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { db } from 'firebaseApp';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { COLLECTIONS, Order, User } from 'types/schema';
+import { COLLECTIONS, MyInfo, Order, User } from 'types/schema';
 import Loader from '../Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
@@ -24,7 +24,7 @@ export default function OrderComplete() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
   const [shippingCost, setShippingCost] = useState(0);
-
+  const [myInfo, setMyInfo] = useState<MyInfo | null>(null);
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!orderId) return;
@@ -42,6 +42,13 @@ export default function OrderComplete() {
           if (userDoc.exists()) {
             const userData = { ...userDoc.data(), id: userDoc.id } as User;
             setOrderUser(userData);
+          }
+
+          // myInfo 데이터 가져오기
+          const myInfoDoc = await getDoc(doc(db, COLLECTIONS.MY_INFO, 'company'));
+          if (myInfoDoc.exists()) {
+            const myInfoData = { ...myInfoDoc.data(), id: myInfoDoc.id } as MyInfo;
+            setMyInfo(myInfoData);
           }
 
           // CFR인 경우 DHL API로 운송료 계산 (임시 구현)
@@ -147,18 +154,36 @@ export default function OrderComplete() {
           </div>
         </div>
 
-        {/* 배송지 정보 섹션 */}
+        {/* 주문자 배송지 정보 섹션 */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">배송지 정보</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">배송지</span>
-              <span className="text-gray-900">{order?.shippingAddress}</span>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">주문자 배송지 정보</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">주문자 정보</h4>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">회사명: {orderUser?.fullCompanyName}</p>
+                <p className="text-sm text-gray-600">담당자: {orderUser?.personInCharge.name}</p>
+                <p className="text-sm text-gray-600">이메일: {orderUser?.email}</p>
+                <p className="text-sm text-gray-600">전화번호: {orderUser?.telNo}</p>
+                <p className="text-sm text-gray-600">휴대폰: {orderUser?.mobNo}</p>
+                <p className="text-sm text-gray-600">주소: {orderUser?.companyAddress}</p>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">운송조건</span>
-              <span className="text-gray-900">{order?.shippingTerms === 'FOB' ? 'FOB (무료)' : 'CFR (운송료 포함)'}</span>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">배송지 정보</h4>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">회사명: {order?.shipTo?.companyName}</p>
+                <p className="text-sm text-gray-600">담당자: {order?.shipTo?.contactName}</p>
+                <p className="text-sm text-gray-600">전화번호: {order?.shipTo?.telNo}</p>
+                <p className="text-sm text-gray-600">휴대폰: {order?.shipTo?.mobNo}</p>
+                <p className="text-sm text-gray-600">이메일: {order?.shipTo?.email}</p>
+                <p className="text-sm text-gray-600">주소: {order?.shipTo?.address}</p>
+              </div>
             </div>
+          </div>
+          <div className="mt-4 flex justify-between">
+            <span className="text-gray-600">운송조건</span>
+            <span className="text-gray-900">{order?.shippingTerms === 'FOB' ? 'FOB (무료)' : 'CFR (운송료 포함)'}</span>
           </div>
         </div>
 
@@ -235,7 +260,7 @@ export default function OrderComplete() {
       {order && orderUser && order.status === 'pending' && (
         <div className="mt-8 flex justify-between items-center">
           <div className="flex space-x-4">
-            <Invoice order={order} user={orderUser} />
+            {myInfo && <Invoice order={order} user={orderUser} myInfo={myInfo} />}
           </div>
           <div className="flex space-x-4">
             <button

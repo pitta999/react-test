@@ -1,6 +1,7 @@
 import { db } from "firebaseApp";
 import { collection, doc, getDoc, getDocs, query, where, orderBy, limit, updateDoc, setDoc } from "firebase/firestore";
 import { COLLECTIONS, User, UserCategory, Product, ProductCategory, Cart, CustomerPrice } from "types/schema";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
 // 사용자 관련 유틸리티
 export const getUserById = async (userId: string): Promise<User | null> => {
@@ -129,6 +130,17 @@ export const updateCustomerPrices = async (userId: string, data: Omit<CustomerPr
     }
   } catch (error) {
     console.error("Error updating customer prices:", error);
+    throw error;
+  }
+};
+
+// 비밀번호 재설정 이메일 발송 유틸리티
+export const sendPasswordResetEmailToUser = async (email: string): Promise<void> => {
+  try {
+    const auth = getAuth();
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
     throw error;
   }
 }; 

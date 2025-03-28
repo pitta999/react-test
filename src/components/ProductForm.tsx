@@ -6,7 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebas
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import AuthContext from "context/AuthContext";
-import { ProductCategory, COLLECTIONS, ProductionStatus } from "types/schema";
+import { ProductCategory, COLLECTIONS, ProductionStatus, ProductGroup } from "types/schema";
 import Loader from "./Loader";
 
 // 상품 카테고리 타입 정의
@@ -36,6 +36,8 @@ export default function ProductForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [groups, setGroups] = useState<ProductGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [status, setStatus] = useState<boolean>(true);  // 사용/미사용 상태 추가
   const [hsCode, setHsCode] = useState<string>("");  // HS Code
   const [origin, setOrigin] = useState<string>("KR");  // 원산지 (기본값: KR)
@@ -58,7 +60,22 @@ export default function ProductForm() {
       }
     };
 
+    const fetchGroups = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "productGroups"));
+        const groupList: ProductGroup[] = [];
+        querySnapshot.forEach((doc) => {
+          groupList.push(doc.data() as ProductGroup);
+        });
+        setGroups(groupList.sort((a, b) => a.name.localeCompare(b.name)));
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+        toast.error("그룹 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+    };
+
     fetchCategories();
+    fetchGroups();
   }, []);
 
   // 수정 모드일 경우 상품 정보 불러오기
@@ -74,6 +91,7 @@ export default function ProductForm() {
             setPrice(productData.price || 0);
             setDescription(productData.description || "");
             setSelectedCategoryId(productData.categoryId || "");
+            setSelectedGroupId(productData.groupId || "");
             setStock(productData.stock || 0);
             setStockStatus(productData.stockStatus || 'ok');
             setImageUrl(productData.imageUrl || "");
@@ -220,11 +238,16 @@ export default function ProductForm() {
         productImageUrl = await uploadImage();
       }
 
-      // 카테고리 ID가 없으면 첫 번째 카테고리 사용
       const categoryId = selectedCategoryId || categories[0]?.id;
       const selectedCategory = categories.find(cat => cat.id === categoryId);
       if (!selectedCategory) {
         throw new Error("선택한 카테고리를 찾을 수 없습니다.");
+      }
+
+      const groupId = selectedGroupId || groups[0]?.id;
+      const selectedGroup = groups.find(group => group.id === groupId);
+      if (!selectedGroup) {
+        throw new Error("선택한 그룹을 찾을 수 없습니다.");
       }
       
       const productData = {
@@ -233,12 +256,14 @@ export default function ProductForm() {
         description,
         categoryId: selectedCategory.id,
         categoryName: selectedCategory.name,
+        groupId: selectedGroup.id,
+        groupName: selectedGroup.name,
         stock: Number(stock),
         stockStatus,
-        status,  // 사용/미사용 상태 추가
-        hsCode,  // HS Code 추가
-        origin,  // 원산지 추가
-        weight: Number(weight),  // 무게 추가
+        status,
+        hsCode,
+        origin,
+        weight: Number(weight),
         productionStatus,
         imageUrl: productImageUrl,
         updatedAt: new Date().toLocaleString("ko-KR"),
@@ -251,7 +276,6 @@ export default function ProductForm() {
         await updateDoc(doc(db, COLLECTIONS.PRODUCTS, productId), productData);
         toast.success("상품 정보가 수정되었습니다.");
       } else {
-        // 새 상품 등록
         const productRef = doc(db, COLLECTIONS.PRODUCTS, uuidv4());
         newProductId = productRef.id;
         await setDoc(productRef, {
@@ -268,9 +292,11 @@ export default function ProductForm() {
           const newPrices = [...customerPriceData.prices, {
             productId: newProductId,
             productName: name,
-            customPrice: Number(price), // 초기 맞춤가격은 정가로 설정
+            customPrice: Number(price),
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
+            groupId: selectedGroup.id,
+            groupName: selectedGroup.name,
           }];
 
           await updateDoc(doc(db, COLLECTIONS.CUSTOMER_PRICES, customerPriceDoc.id), {
@@ -431,6 +457,30 @@ export default function ProductForm() {
           <div className="mt-2">
             <Link to="/products/categories" className="text-sm text-primary-600 hover:text-primary-900">
               카테고리 관리
+            </Link>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="group" className="block text-sm font-medium text-gray-700 mb-2">
+            그룹
+          </label>
+          <select
+            id="group"
+            value={selectedGroupId || (groups[0]?.id || '')}
+            onChange={(e) => setSelectedGroupId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2">
+            <Link to="/groups" className="text-sm text-primary-600 hover:text-primary-900">
+              그룹 관리
             </Link>
           </div>
         </div>

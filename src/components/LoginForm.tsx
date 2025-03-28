@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { app } from "firebaseApp";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -99,6 +99,17 @@ export default function LoginForm() {
           {error && error?.length > 0 && (
             <div className="text-red-500 text-sm text-center">{error}</div>
           )}
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-primary-600 hover:text-primary-500"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
+            </div>
+          </div>
 
           <div>
             <button
