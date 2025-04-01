@@ -1,12 +1,13 @@
-import Footer from "components/Footer";
-import Header from "components/Header";
-import UserDetail from "components/UserDetail";
+import { Header, Footer } from "components/common";
+import { UserDetail } from "components/user";
 
-export default function PostPage() {
+export default function UserDetailPage() {
   return (
     <>
       <Header />
-      <UserDetail />
+      <main className="container mx-auto px-4 py-8">
+        <UserDetail />
+      </main>
       <Footer />
     </>
   );

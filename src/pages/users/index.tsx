@@ -1,13 +1,13 @@
-import Footer from "components/Footer";
-import Header from "components/Header";
-import UserList from "components/UserList";
-import { Link } from "react-router-dom";
+import { Header, Footer } from "components/common";
+import { UserList } from "components/user";
 
-export default function PostsPage() {
+export default function UserListPage() {
   return (
     <>
       <Header />
-      <UserList/>
+      <main className="container mx-auto px-4 py-8">
+        <UserList />
+      </main>
       <Footer />
     </>
   );

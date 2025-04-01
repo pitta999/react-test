@@ -28,9 +28,12 @@ export interface User extends BaseDocument {
   fullCompanyName: string;
   tradingName: string;
   companyAddress: string;
+  countryCode: string;  // 국가 코드 추가
+  vatNumber: string;    // VAT 번호 추가
   personInCharge: {
     name: string;
     title: string;
+    email: string;  // 이메일 필드 추가
   };
   telNo: string;
   mobNo: string;
@@ -72,12 +75,19 @@ export interface Product extends BaseDocument {
   groupName: string;
   stock: number;
   stockStatus: 'ok' | 'nok';
-  imageUrl: string;
+  imageUrl: {
+    thumbnail: string;    // 32x32
+    small: string;        // 80x80
+    original: string;     // 400x400
+  };
   status: boolean;  // true: 사용, false: 미사용
   hsCode: string;  // HS Code
   origin: string;  // 원산지
   weight: number;  // 무게
   productionStatus: ProductionStatus;  // 생산 상태 추가
+  upc: string;     // UPC 코드
+  ean: string;     // EAN 코드
+  sortOrder: number;  // 정렬 순서
 }
 
 export interface ProductCategory extends BaseDocument {
@@ -91,7 +101,11 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  imageUrl: string;
+  imageUrl: {
+    thumbnail: string;
+    small: string;
+    original: string;
+  };
   discountPrice?: number;
   categoryName: string;
 }
@@ -167,7 +181,11 @@ export interface OrderItem {
   price: number;
   discountPrice?: number;
   quantity: number;
-  imageUrl: string;
+  imageUrl: {
+    thumbnail: string;
+    small: string;
+    original: string;
+  };
   categoryName: string;
 }
 

@@ -1,7 +1,7 @@
-import Footer from "components/Footer";
-import Header from "components/Header";
-import UserRegistration from "components/UserRegistration";
-import Profile from "components/Profile";
+import Footer from "components/common/Footer";
+import Header from "components/common/Header";
+import UserRegistration from "components/user/UserRegistration";
+import Profile from "components/user/Profile";
 
 export default function ProfilePage() {
   return (

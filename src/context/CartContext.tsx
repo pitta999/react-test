@@ -10,7 +10,11 @@ interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  imageUrl: string;
+  imageUrl: {
+    thumbnail: string;
+    small: string;
+    original: string;
+  };
   discountPrice?: number;
   categoryName: string;
 }

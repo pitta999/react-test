@@ -1,12 +1,13 @@
-import Footer from "components/Footer";
-import Header from "components/Header";
-import OrderHistory from "components/order/OrderHistory";
+import { Header, Footer } from "components/common";
+import { OrderHistory } from "components/order";
 
 export default function OrderHistoryPage() {
   return (
     <>
       <Header />
-      <OrderHistory />
+      <main className="container mx-auto px-4 py-8">
+        <OrderHistory />
+      </main>
       <Footer />
     </>
   );

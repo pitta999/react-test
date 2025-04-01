@@ -1,5 +1,5 @@
-import Header from "components/Header";
-import UserCustomPrice from "components/UserCustomPrice";
+import Header from "components/common/Header";
+import UserCustomPrice from "components/user/UserCustomPrice";
 
 export default function UserCustomPricePage() {
   return (

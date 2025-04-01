@@ -1,5 +1,5 @@
-import Footer from "components/Footer";
-import Header from "components/Header";
+import Footer from "components/common/Footer";
+import Header from "components/common/Header";
 import OrderDetail from "components/order/OrderDetail";
 
 export default function OrderDetailPage() {

@@ -1,6 +1,6 @@
-import Header from "components/Header";
-import Footer from "components/Footer";
-import ProductRelationships from "components/ProductRelationships";
+import Header from "components/common/Header";
+import Footer from "components/common/Footer";
+import ProductRelationships from "components/product/ProductRelationships";
 
 export default function ProductRelationshipsPage() {
   return (

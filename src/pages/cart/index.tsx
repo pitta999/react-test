@@ -1,6 +1,6 @@
-import Header from "components/Header";
-import Footer from "components/Footer";
-import Cart from "components/Cart";
+import Header from "components/common/Header";
+import Footer from "components/common/Footer";
+import Cart from "components/product/Cart";
 
 export default function CartPage() {
   return (

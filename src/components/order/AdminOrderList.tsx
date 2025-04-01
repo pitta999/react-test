@@ -4,7 +4,7 @@ import { db } from 'firebaseApp';
 import { collection, query, orderBy, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { COLLECTIONS, Order, OrderStatus } from 'types/schema';
 import AuthContext from 'context/AuthContext';
-import Loader from '../Loader';
+import Loader from 'components/common/Loader';
 import { toast } from 'react-toastify';
 
 export default function AdminOrderList() {

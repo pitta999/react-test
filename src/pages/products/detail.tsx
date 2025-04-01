@@ -1,12 +1,13 @@
-import Header from "components/Header";
-import Footer from "components/Footer";
-import ProductDetail from "components/ProductDetail";
+import { Header, Footer } from "components/common";
+import { ProductDetail } from "components/product";
 
 export default function ProductDetailPage() {
   return (
     <>
       <Header />
-      <ProductDetail />
+      <main className="container mx-auto px-4 py-8">
+        <ProductDetail />
+      </main>
       <Footer />
     </>
   );

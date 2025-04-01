@@ -1,6 +1,6 @@
-import Header from "components/Header";
-import Footer from "components/Footer";
-import ProductCategoryList from "components/ProductCategoryList";
+import Header from "components/common/Header";
+import Footer from "components/common/Footer";
+import ProductCategoryList from "components/product/ProductCategoryList";
 
 export default function ProductCategoriesPage() {
   return (

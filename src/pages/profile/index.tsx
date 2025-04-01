@@ -1,14 +1,15 @@
-import Footer from "components/Footer";
-import Header from "components/Header";
+import Footer from "components/common/Footer";
+import Header from "components/common/Header";
 // import PostList from "components/PostList";
-import Profile from "components/Profile";
-import ProfileInfo from "components/ProfileInfo";
+import Profile from "components/user/Profile";
+import ProfileInfo from "components/user/ProfileInfo";
+
 
 export default function ProfilePage() {
   return (
     <>
       <Header />
-      <Profile />
+      {/* <Profile /> */}
       <ProfileInfo />
       {/* <PostList hasNavigation={false} defaultTab="my" /> */}
       <Footer />

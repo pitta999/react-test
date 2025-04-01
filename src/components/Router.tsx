@@ -7,9 +7,10 @@ import PostDetail from "pages/posts/detail";
 import PostNew from "pages/posts/new";
 import PostEdit from "pages/posts/edit";
 import ProfilePage from "pages/profile";
+import ProfileEditPage from "pages/profile/edit";
 import LoginPage from "pages/login";
 import SignupPage from "pages/signup";
-import ForgotPassword from "components/ForgotPassword";
+import ForgotPassword from "components/auth/ForgotPassword";
 import UserList from "pages/users";
 import UserDetail from "pages/users/detail";
 import UserForm from "pages/users/form";
@@ -37,6 +38,9 @@ import DhlApiTest from 'pages/DhlApiTest';
 import ProductGroupList from "pages/products/group/grouplist";
 import ProductGroupForm from "pages/products/group/groupform";
 import MyInfoForm from "pages/admin/myinfo";
+import SheetUpload from "pages/products/sheet/editSheet";
+import ExcelUpload from "pages/products/sheet/newExcel";
+
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -57,6 +61,7 @@ export default function Router({ isAuthenticated }: RouterProps) {
             <Route path="/posts/new" element={<PostNew />} />
             <Route path="/posts/edit/:id" element={<PostEdit />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/edit" element={<ProfileEditPage />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:productId" element={<ProductDetail />} />
             <Route path="/cart" element={<CartPage />} />
@@ -164,9 +169,16 @@ export default function Router({ isAuthenticated }: RouterProps) {
             {/* 슈퍼 어드민 전용 회사 정보 관리 라우트 */}
             <Route 
               path="/my-info" 
-              element={isSuperAdmin ? <MyInfoForm /> : <Navigate replace to="/" />} 
+              element={isAdmin ? <MyInfoForm /> : <Navigate replace to="/" />} 
             />
-            
+            <Route 
+              path="/products/sheet/editSheet" 
+              element={(isAdmin || isSuperAdmin) ? <SheetUpload /> : <Navigate replace to="/" />} 
+            />
+            <Route 
+              path="/products/sheet/newExcel" 
+              element={(isAdmin || isSuperAdmin) ? <ExcelUpload /> : <Navigate replace to="/" />} 
+            />
             {/* 존재하지 않는 경로는 홈으로 리다이렉트 */}
             <Route path="*" element={<Navigate replace to="/" />} />
           </>

@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 import { db } from 'firebaseApp';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { COLLECTIONS, MyInfo, Order, User } from 'types/schema';
-import Loader from '../Loader';
+import Loader from 'components/common/Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
 import Invoice from './Invoice';
@@ -206,7 +206,11 @@ export default function OrderComplete() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
-                            <img className="h-10 w-10 rounded-full object-cover" src={item.imageUrl} alt={item.name} />
+                            <img 
+                              className="h-10 w-10 rounded-full object-cover" 
+                              src={item.imageUrl.thumbnail} 
+                              alt={item.name} 
+                            />
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{item.name}</div>

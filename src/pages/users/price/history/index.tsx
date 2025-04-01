@@ -1,5 +1,5 @@
-import Header from "components/Header";
-import UserPriceHistory from "components/UserPriceHistory";
+import Header from "components/common/Header";
+import UserPriceHistory from "components/user/UserPriceHistory";
 
 export default function UserPriceHistoryPage() {
   return (

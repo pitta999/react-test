@@ -8,7 +8,7 @@ import { AuthContextProvider } from "context/AuthContext";
 import { CartProvider } from 'context/CartContext';
 
 import Router from "./components/Router";
-import Loader from "components/Loader";
+import Loader from "components/common/Loader";
 
 function App() {
   const context = useContext(ThemeContext);

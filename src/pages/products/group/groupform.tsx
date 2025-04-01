@@ -1,6 +1,6 @@
-import Header from "components/Header";
-import Footer from "components/Footer";
-import ProductGroupForm from "components/ProductGroupForm";
+import Header from "components/common/Header";
+import Footer from "components/common/Footer";
+import ProductGroupForm from "components/product/ProductGroupForm";
 
 export default function ProductManagePage() {
   return (

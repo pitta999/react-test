@@ -4,7 +4,7 @@ import { db } from 'firebaseApp';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { COLLECTIONS, MyInfo, Order, User } from 'types/schema';
 import AuthContext from 'context/AuthContext';
-import Loader from '../Loader';
+import Loader from 'components/common/Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
 import Invoice from './Invoice';
@@ -316,7 +316,7 @@ export default function OrderDetail() {
                     <div className="flex-shrink-0 h-10 w-10">
                       <img
                         className="h-10 w-10 rounded-full object-cover"
-                        src={item.imageUrl}
+                        src={item.imageUrl.thumbnail}
                         alt={item.name}
                       />
                     </div>

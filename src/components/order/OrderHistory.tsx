@@ -4,7 +4,7 @@ import { db } from 'firebaseApp';
 import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { COLLECTIONS, Order } from 'types/schema';
 import AuthContext from 'context/AuthContext';
-import Loader from '../Loader';
+import Loader from 'components/common/Loader';
 
 export default function OrderHistory() {
   const { user } = useContext(AuthContext);
