@@ -16,7 +16,11 @@ interface CategoryInfo {
 }
 
 const columns: ColumnDef<SheetData>[] = [
-  { header: '상품명', accessorKey: 'name' },
+  { 
+    header: '상품명', 
+    accessorKey: 'name',
+    size: 300,
+  },
   { header: '가격', accessorKey: 'price' },
   { header: '설명', accessorKey: 'description' },
   { header: '카테고리', accessorKey: 'categoryName' },
@@ -165,6 +169,17 @@ export default function SheetUpload() {
     };
 
     switch (columnId) {
+      case 'name':
+        return (
+          <input
+            {...commonProps}
+            type="text"
+            value={value}
+            className={`${commonProps.className} min-w-[300px] ${
+              data[rowIndex].isModified ? 'bg-blue-50' : ''
+            }`}
+          />
+        );
       case 'stockStatus':
         return (
           <select
@@ -278,15 +293,17 @@ export default function SheetUpload() {
 
       {data.length > 0 && (
         <div className="overflow-x-auto border rounded-lg">
-          <div className="min-w-[2000px]">
+          <div className="min-w-[2000px] relative">
             <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 {table.getHeaderGroups().map(headerGroup => (
                   <tr key={headerGroup.id}>
-                    {headerGroup.headers.map(header => (
+                    {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
+                          index === 0 ? 'sticky left-0 bg-gray-50 z-20 border-r border-gray-200' : ''
+                        }`}
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -301,12 +318,20 @@ export default function SheetUpload() {
                 {table.getRowModel().rows.map((row, rowIndex) => (
                   <tr 
                     key={row.id}
-                    className={data[rowIndex].isModified ? 'bg-blue-50' : ''}
+                    className={`${
+                      rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    } ${
+                      data[rowIndex].isModified ? 'bg-blue-50' : ''
+                    }`}
                   >
-                    {row.getVisibleCells().map(cell => (
+                    {row.getVisibleCells().map((cell, cellIndex) => (
                       <td
                         key={cell.id}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${
+                          cellIndex === 0 ? `sticky left-0 z-10 border-r border-gray-200 ${
+                            rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                          }` : ''
+                        } ${data[rowIndex].isModified ? 'bg-blue-50' : ''}`}
                       >
                         {renderCell(rowIndex, cell.column.id as keyof SheetData, cell.getValue())}
                       </td>

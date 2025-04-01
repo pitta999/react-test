@@ -28,6 +28,7 @@ interface ProductType {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+  sortOrder?: number;
 }
 
 interface UserData {
@@ -76,11 +77,16 @@ export default function ProductList() {
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
-  }>({ key: 'createdAt', direction: 'asc' });
+  }>({ key: 'sortOrder', direction: 'asc' });
 
   // 정렬 함수
   const sortProducts = (products: ProductType[]) => {
     return [...products].sort((a, b) => {
+      if (sortConfig.key === 'sortOrder') {
+        return sortConfig.direction === 'asc'
+          ? (a.sortOrder || 0) - (b.sortOrder || 0)
+          : (b.sortOrder || 0) - (a.sortOrder || 0);
+      }
       if (sortConfig.key === 'name') {
         return sortConfig.direction === 'asc' 
           ? a.name.localeCompare(b.name)

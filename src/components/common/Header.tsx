@@ -81,7 +81,7 @@ export default function Header() {
                       { label: "회사 정보 관리", to: "/my-info" },
                       { label: "사용자 관리", to: "/users" },
                       { label: "상품 관리", to: "/products/manage" },
-                      { label: "상품 엑셀 업로드", to: "/products/sheet/newExcel" },
+                      { label: "상품 엑셀 등록", to: "/products/sheet/newExcel" },
                       { label: "상품 일괄 수정", to: "/products/sheet/editSheet" }
                     ]}
                     isAdmin={isAdmin}

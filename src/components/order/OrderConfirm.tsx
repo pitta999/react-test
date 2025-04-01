@@ -135,8 +135,8 @@ export default function OrderComplete() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">결제 진행</h1>
-        <p className="text-gray-600">주문 정보를 확인하고 결제를 진행해주세요.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">주문 확인 및 결제</h1>
+        <p className="text-gray-600">주문 정보를 확인하고 ??????????</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">

@@ -17,7 +17,7 @@ export default function ProductRelationships() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSourceProduct, setSelectedSourceProduct] = useState<string>('');
   const [selectedTargetProduct, setSelectedTargetProduct] = useState<string>('');
-  const [isBidirectional, setIsBidirectional] = useState(false);
+  const [isBidirectional, setIsBidirectional] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [sortField, setSortField] = useState<SortField>('createdAt');
@@ -57,6 +57,10 @@ export default function ProductRelationships() {
         ...doc.data(),
         id: doc.id
       })) as Product[];
+      
+      // sortOrder로 정렬
+      productsList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      
       setProducts(productsList);
     } catch (error) {
       console.error('상품 목록을 불러오는 중 오류가 발생했습니다:', error);
@@ -112,7 +116,7 @@ export default function ProductRelationships() {
       fetchRelationships();
       setSelectedSourceProduct('');
       setSelectedTargetProduct('');
-      setIsBidirectional(false);
+      setIsBidirectional(true);
     } catch (error) {
       console.error('연관 상품 관계 추가 중 오류가 발생했습니다:', error);
       toast.error('연관 상품 관계 추가 중 오류가 발생했습니다.');
@@ -137,10 +141,12 @@ export default function ProductRelationships() {
            relationship.targetProductId === selectedProduct;
   });
 
-  const filteredProducts = products.filter(product => {
-    if (!selectedCategory) return true;
-    return product.categoryId === selectedCategory;
-  });
+  const filteredProducts = products
+    .filter(product => {
+      if (!selectedCategory) return true;
+      return product.categoryId === selectedCategory;
+    })
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -181,7 +187,9 @@ export default function ProductRelationships() {
   // 소스 카테고리 변경 시 해당 카테고리의 상품 필터링
   useEffect(() => {
     if (sourceCategory) {
-      const filtered = products.filter(product => product.categoryId === sourceCategory);
+      const filtered = products
+        .filter(product => product.categoryId === sourceCategory)
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       setFilteredSourceProducts(filtered);
       setSelectedSourceProduct(''); // 카테고리가 변경되면 선택된 상품 초기화
     } else {
@@ -192,7 +200,9 @@ export default function ProductRelationships() {
   // 타겟 카테고리 변경 시 해당 카테고리의 상품 필터링
   useEffect(() => {
     if (targetCategory) {
-      const filtered = products.filter(product => product.categoryId === targetCategory);
+      const filtered = products
+        .filter(product => product.categoryId === targetCategory)
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       setFilteredTargetProducts(filtered);
       setSelectedTargetProduct(''); // 카테고리가 변경되면 선택된 상품 초기화
     } else {
@@ -225,99 +235,97 @@ export default function ProductRelationships() {
           <h3 className="text-lg leading-6 font-medium text-gray-900">연관 상품 추가</h3>
         </div>
         <div className="px-4 py-5 sm:p-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-8">
+            {/* 소스 상품 선택 */}
             <div>
-              <label htmlFor="sourceCategory" className="block text-sm font-medium text-gray-700">
-                소스 카테고리
-              </label>
-              <select
-                id="sourceCategory"
-                value={sourceCategory}
-                onChange={(e) => setSourceCategory(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
-              >
-                <option value="">카테고리 선택</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <h4 className="text-sm font-medium text-gray-700 mb-4">소스 상품</h4>
+              <div className="space-y-4">
+                <div>
+                  <select
+                    id="sourceCategory"
+                    value={sourceCategory}
+                    onChange={(e) => setSourceCategory(e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
+                  >
+                    <option value="">카테고리 선택</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="sourceProduct" className="block text-sm font-medium text-gray-700">
-                소스 상품
-              </label>
-              <select
-                id="sourceProduct"
-                value={selectedSourceProduct}
-                onChange={(e) => setSelectedSourceProduct(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
-                disabled={!sourceCategory}
-              >
-                <option value="">상품 선택</option>
-                {filteredSourceProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="targetCategory" className="block text-sm font-medium text-gray-700">
-                타겟 카테고리
-              </label>
-              <select
-                id="targetCategory"
-                value={targetCategory}
-                onChange={(e) => setTargetCategory(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
-              >
-                <option value="">카테고리 선택</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="targetProduct" className="block text-sm font-medium text-gray-700">
-                타겟 상품
-              </label>
-              <select
-                id="targetProduct"
-                value={selectedTargetProduct}
-                onChange={(e) => setSelectedTargetProduct(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
-                disabled={!targetCategory}
-              >
-                <option value="">상품 선택</option>
-                {filteredTargetProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="sm:col-span-2">
-              <div className="flex items-center">
-                <input
-                  id="bidirectional"
-                  type="checkbox"
-                  checked={isBidirectional}
-                  onChange={(e) => setIsBidirectional(e.target.checked)}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="bidirectional" className="ml-2 block text-sm text-gray-900">
-                  양방향 관계
-                </label>
+                <div>
+                  <select
+                    id="sourceProduct"
+                    value={selectedSourceProduct}
+                    onChange={(e) => setSelectedSourceProduct(e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
+                    disabled={!sourceCategory}
+                  >
+                    <option value="">상품 선택</option>
+                    {filteredSourceProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
+
+            {/* 타겟 상품 선택 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-4">타겟 상품</h4>
+              <div className="space-y-4">
+                <div>
+                  <select
+                    id="targetCategory"
+                    value={targetCategory}
+                    onChange={(e) => setTargetCategory(e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
+                  >
+                    <option value="">카테고리 선택</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    id="targetProduct"
+                    value={selectedTargetProduct}
+                    onChange={(e) => setSelectedTargetProduct(e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
+                    disabled={!targetCategory}
+                  >
+                    <option value="">상품 선택</option>
+                    {filteredTargetProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center">
+            <input
+              id="bidirectional"
+              type="checkbox"
+              checked={isBidirectional}
+              onChange={(e) => setIsBidirectional(e.target.checked)}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <label htmlFor="bidirectional" className="ml-2 block text-sm text-gray-900">
+              양방향 관계
+            </label>
           </div>
 
           <div className="mt-6">
@@ -337,11 +345,8 @@ export default function ProductRelationships() {
           <h3 className="text-lg leading-6 font-medium text-gray-900">연관 상품 필터</h3>
         </div>
         <div className="px-4 py-5 sm:p-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="space-y-4">
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                카테고리
-              </label>
               <select
                 id="category"
                 value={selectedCategory}
@@ -349,7 +354,7 @@ export default function ProductRelationships() {
                   setSelectedCategory(e.target.value);
                   setSelectedProduct('');
                 }}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
               >
                 <option value="">전체 카테고리</option>
                 {categories.map((category) => (
@@ -361,14 +366,11 @@ export default function ProductRelationships() {
             </div>
 
             <div>
-              <label htmlFor="product" className="block text-sm font-medium text-gray-700">
-                상품
-              </label>
               <select
                 id="product"
                 value={selectedProduct}
                 onChange={(e) => setSelectedProduct(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
                 disabled={!selectedCategory}
               >
                 <option value="">전체 상품</option>

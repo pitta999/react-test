@@ -307,7 +307,7 @@ export default function ExcelUpload() {
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {isLoading ? '업로드 중...' : '업로드'}
+            {isLoading ? '등록 중...' : '등록'}
           </button>
         </div>
       </div>
