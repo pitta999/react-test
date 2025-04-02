@@ -15,8 +15,9 @@ export default function ProductRelationships() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [relationships, setRelationships] = useState<ProductRelationship[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
   const [selectedSourceProduct, setSelectedSourceProduct] = useState<string>('');
-  const [selectedTargetProduct, setSelectedTargetProduct] = useState<string>('');
+  const [selectedTargetProducts, setSelectedTargetProducts] = useState<string[]>([]);
   const [isBidirectional, setIsBidirectional] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
@@ -86,41 +87,58 @@ export default function ProductRelationships() {
   };
 
   const handleAddRelationship = async () => {
-    if (!selectedSourceProduct || !selectedTargetProduct) {
-      toast.error('소스 상품과 타겟 상품을 모두 선택해주세요.');
+    if (!selectedSourceProduct || selectedTargetProducts.length === 0) {
+      toast.error('소스 상품과 타겟 상품을 선택해주세요.');
       return;
     }
 
     try {
+      setIsAdding(true);
       // 중복 관계 체크
-      const existingRelationship = relationships.find(
-        rel => rel.sourceProductId === selectedSourceProduct && 
-               rel.targetProductId === selectedTargetProduct
-      );
+      for (const targetProductId of selectedTargetProducts) {
+        const existingRelationship = relationships.find(
+          rel => rel.sourceProductId === selectedSourceProduct && 
+                 rel.targetProductId === targetProductId
+        );
 
-      if (existingRelationship) {
-        toast.error('이미 존재하는 연관 관계입니다.');
-        return;
+        if (existingRelationship) {
+          toast.error('이미 존재하는 연관 관계가 있습니다.');
+          return;
+        }
       }
 
-      // 새로운 관계 추가 (단일 문서)
-      await addDoc(collection(db, COLLECTIONS.PRODUCT_RELATIONSHIPS), {
-        sourceProductId: selectedSourceProduct,
-        targetProductId: selectedTargetProduct,
-        bidirectional: isBidirectional,
-        createdAt: new Date().toISOString(),
-        createdBy: user?.email || user?.uid
-      });
+      // 새로운 관계 추가 (여러 문서)
+      for (const targetProductId of selectedTargetProducts) {
+        await addDoc(collection(db, COLLECTIONS.PRODUCT_RELATIONSHIPS), {
+          sourceProductId: selectedSourceProduct,
+          targetProductId: targetProductId,
+          bidirectional: isBidirectional,
+          createdAt: new Date().toISOString(),
+          createdBy: user?.email || user?.uid
+        });
+      }
 
       toast.success('연관 상품 관계가 추가되었습니다.');
       fetchRelationships();
       setSelectedSourceProduct('');
-      setSelectedTargetProduct('');
+      setSelectedTargetProducts([]);
       setIsBidirectional(true);
     } catch (error) {
       console.error('연관 상품 관계 추가 중 오류가 발생했습니다:', error);
       toast.error('연관 상품 관계 추가 중 오류가 발생했습니다.');
+    } finally {
+      setIsAdding(false);
     }
+  };
+
+  const handleTargetProductToggle = (productId: string) => {
+    setSelectedTargetProducts(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
   };
 
   const handleDeleteRelationship = async (relationshipId: string) => {
@@ -204,7 +222,7 @@ export default function ProductRelationships() {
         .filter(product => product.categoryId === targetCategory)
         .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       setFilteredTargetProducts(filtered);
-      setSelectedTargetProduct(''); // 카테고리가 변경되면 선택된 상품 초기화
+      setSelectedTargetProducts([]); // 카테고리가 변경되면 선택된 상품 초기화
     } else {
       setFilteredTargetProducts(products);
     }
@@ -295,21 +313,37 @@ export default function ProductRelationships() {
                   </select>
                 </div>
 
-                <div>
-                  <select
-                    id="targetProduct"
-                    value={selectedTargetProduct}
-                    onChange={(e) => setSelectedTargetProduct(e.target.value)}
-                    className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg bg-white shadow-sm"
-                    disabled={!targetCategory}
-                  >
-                    <option value="">상품 선택</option>
+                <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+                  <div className="divide-y divide-gray-200">
                     {filteredTargetProducts.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
+                      <div
+                        key={product.id}
+                        className={`flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer ${
+                          selectedTargetProducts.includes(product.id) ? 'bg-blue-50' : ''
+                        }`}
+                        onClick={() => handleTargetProductToggle(product.id)}
+                      >
+                        <label 
+                          className="flex items-center cursor-pointer w-full" 
+                          onClick={(e) => e.stopPropagation()} // label 이벤트 전파 중지
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTargetProducts.includes(product.id)}
+                            onChange={() => handleTargetProductToggle(product.id)} // 체크박스 자체 이벤트 핸들러
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                            onClick={(e) => e.stopPropagation()} // 이 부분이 중요! 체크박스 클릭 이벤트만 중지
+                          />
+                          <span 
+                            className="ml-3 text-sm text-gray-900"
+                            // onClick={() => handleTargetProductToggle(product.id)} // span 자체 이벤트 핸들러
+                          >
+                            {product.name}
+                          </span>
+                        </label>
+                      </div>
                     ))}
-                  </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -331,9 +365,17 @@ export default function ProductRelationships() {
           <div className="mt-6">
             <button
               onClick={handleAddRelationship}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              disabled={isAdding}
+              className="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              연관 상품 추가
+              {isAdding ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  추가 중...
+                </>
+              ) : (
+                '연관 상품 추가'
+              )}
             </button>
           </div>
         </div>

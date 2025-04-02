@@ -76,13 +76,13 @@ export default function Header() {
               <>
                 {(isAdmin || isSuperAdmin) && (
                   <Dropdown
-                    label="관리"
+                    label="Management"
                     items={[
-                      { label: "회사 정보 관리", to: "/my-info" },
-                      { label: "사용자 관리", to: "/users" },
-                      { label: "상품 관리", to: "/products/manage" },
-                      { label: "상품 엑셀 등록", to: "/products/sheet/newExcel" },
-                      { label: "상품 일괄 수정", to: "/products/sheet/editSheet" }
+                      { label: "Company Info", to: "/my-info" },
+                      { label: "User", to: "/users" },
+                      { label: "Product", to: "/products/manage" },
+                      { label: "Excel Registration", to: "/products/sheet/newExcel" },
+                      { label: "Batch Update", to: "/products/sheet/editSheet" }
                     ]}
                     isAdmin={isAdmin}
                     isSuperAdmin={isSuperAdmin}
@@ -90,9 +90,9 @@ export default function Header() {
                 )}
                 {(isAdmin || isSuperAdmin) && (
                   <Dropdown
-                    label="내역"
+                    label="History"
                     items={[
-                      { label: "주문내역", to: "/admin/orders" }
+                      { label: "Order History", to: "/admin/orders" }
                     ]}
                     isAdmin={isAdmin}
                     isSuperAdmin={isSuperAdmin}
@@ -102,10 +102,10 @@ export default function Header() {
                   게시글
                 </Link> */}
                 <Link to="/products" className="text-gray-600 hover:text-gray-900">
-                  상품
+                  Product
                 </Link>
                 <Link to="/cart" className="text-gray-600 hover:text-gray-900 relative">
-                  장바구니
+                  Cart
                   {totalItems > 0 && (
                     <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       {totalItems}
@@ -113,25 +113,19 @@ export default function Header() {
                   )}
                 </Link>
                 <Link to="/profile" className="text-gray-600 hover:text-gray-900">
-                  프로필
+                  Profile
                 </Link>
                 <Link
                   to="/order-history"
                   className="text-gray-600 hover:text-gray-900"
                 >
-                  주문 내역
+                  Order History
                 </Link>
               </>
             ) : (
               <>
                 <Link to="/login" className="text-gray-600 hover:text-gray-900">
-                  로그인
-                </Link>
-                <Link 
-                  to="/signup" 
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  회원가입
+                  Login
                 </Link>
               </>
             )}

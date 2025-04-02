@@ -15,7 +15,7 @@ export default function OrderHistory() {
   useEffect(() => {
     const fetchOrders = async () => {
       if (!user?.uid) {
-        console.log('사용자 정보가 없습니다. 주문을 불러올 수 없습니다.');
+        console.log('User information is missing. Unable to load orders.');
         setIsLoading(false);
         return;
       }
@@ -23,7 +23,7 @@ export default function OrderHistory() {
       try {
         setIsLoading(true);
         setError(null);
-        console.log('주문 내역을 불러오는 중...', user.uid);
+        console.log('Loading orders...', user.uid);
         
         // 일단 모든 주문을 가져온 다음 클라이언트에서 필터링
         const orderQuery = query(
@@ -40,17 +40,17 @@ export default function OrderHistory() {
           allOrders.push(orderData);
         });
         
-        console.log('불러온 전체 주문 내역:', allOrders.length, '건');
+        console.log('Loaded all orders:', allOrders.length, 'orders');
         
         // 클라이언트에서 현재 사용자의 주문만 필터링
         const userOrders = allOrders.filter(order => order.userId === user.uid);
-        console.log('현재 사용자의 주문 내역:', userOrders.length, '건');
-        console.log('첫 번째 주문 정보:', userOrders.length > 0 ? JSON.stringify(userOrders[0]) : '없음');
+        console.log('Current user orders:', userOrders.length, 'orders');
+        console.log('First order info:', userOrders.length > 0 ? JSON.stringify(userOrders[0]) : 'None');
         
         setOrders(userOrders);
       } catch (error) {
-        console.error('주문 내역을 불러오는 중 오류가 발생했습니다:', error);
-        setError('주문 내역을 불러오는 중 오류가 발생했습니다.');
+        console.error('Error loading orders:', error);
+        setError('Error loading orders.');
       } finally {
         setIsLoading(false);
       }
@@ -88,17 +88,17 @@ export default function OrderHistory() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return '대기중';
+        return 'Pending';
       case 'processing':
-        return '처리중';
+        return 'Processing';
       case 'shipped':
-        return '배송중';
+        return 'Shipped';
       case 'delivered':
-        return '배송완료';
+        return 'Delivered';
       case 'cancelled':
-        return '취소됨';
+        return 'Cancelled';
       default:
-        return '알 수 없음';
+        return 'Unknown';
     }
   };
 
@@ -118,13 +118,13 @@ export default function OrderHistory() {
   const getPaymentStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return '결제 대기중';
+        return 'Pending';
       case 'paid':
-        return '결제 완료';
+        return 'Paid';
       case 'failed':
-        return '결제 실패';
+        return 'Failed';
       default:
-        return '알 수 없음';
+        return 'Unknown';
     }
   };
 
@@ -136,13 +136,13 @@ export default function OrderHistory() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">에러가 발생했습니다</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">An error occurred</h2>
           <p className="text-gray-600 mb-8">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700"
           >
-            새로고침
+            Refresh
           </button>
         </div>
       </div>
@@ -153,13 +153,13 @@ export default function OrderHistory() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">주문 내역이 없습니다</h2>
-          <p className="text-gray-600 mb-8">아직 주문한 상품이 없습니다.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">No orders found</h2>
+          <p className="text-gray-600 mb-8">No orders yet.</p>
           <Link
             to="/products"
             className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700"
           >
-            상품 목록으로 이동
+            Go to product list
           </Link>
         </div>
       </div>
@@ -168,7 +168,7 @@ export default function OrderHistory() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">주문 내역</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Order History</h1>
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <ul className="divide-y divide-gray-200">
@@ -178,10 +178,10 @@ export default function OrderHistory() {
                 <div className="flex flex-col md:flex-row justify-between">
                   <div className="mb-4 md:mb-0">
                     <p className="text-lg font-medium text-gray-900 mb-1">
-                      주문번호: {order.orderId}
+                      Order Number: {order.orderId}
                     </p>
                     <p className="text-sm text-gray-500">
-                      주문일: {new Date(order.createdAt).toLocaleDateString()}
+                      Order Date: {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex flex-col md:items-end">
@@ -204,8 +204,8 @@ export default function OrderHistory() {
                 <div className="mt-4">
                   <p className="text-sm text-gray-700">
                     {order.items[0]?.name}
-                    {order.items.length > 1 && ` 외 ${order.items.length - 1}개 상품`}
-                    {' '}(총 {order.items.reduce((total, item) => total + item.quantity, 0)}개)
+                    {order.items.length > 1 && ` and ${order.items.length - 1} more items`}
+                    {' '}(Total {order.items.reduce((total, item) => total + item.quantity, 0)} items)
                   </p>
                 </div>
               </Link>
@@ -219,7 +219,7 @@ export default function OrderHistory() {
           to="/products"
           className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
         >
-          계속 쇼핑하기
+          Continue Shopping
         </Link>
       </div>
     </div>

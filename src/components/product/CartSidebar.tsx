@@ -50,12 +50,12 @@ export default function CartSidebar() {
         {/* 헤더 */}
         <div className="px-3 py-4 bg-gray-50 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-900">장바구니</h2>
+            <h2 className="text-sm font-medium text-gray-900">Cart</h2>
             <button
               onClick={() => setIsCartOpen(false)}
               className="text-gray-400 hover:text-gray-500"
             >
-              <span className="sr-only">닫기</span>
+              <span className="sr-only">Close</span>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -66,7 +66,7 @@ export default function CartSidebar() {
         {/* 상품 목록 */}
         <div className="flex-1 overflow-y-auto px-3 py-4">
           {items.length === 0 ? (
-            <p className="text-center text-xs text-gray-500">장바구니가 비어있습니다.</p>
+            <p className="text-center text-xs text-gray-500">Cart is empty.</p>
           ) : (
             <ul className="divide-y divide-gray-200">
               {items.map((item) => (
@@ -137,7 +137,7 @@ export default function CartSidebar() {
                           onClick={() => removeItem(item.id)}
                           className="font-medium text-primary-600 hover:text-primary-500 text-xs"
                         >
-                          삭제
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -151,7 +151,7 @@ export default function CartSidebar() {
         {/* 푸터 */}
         <div className="border-t border-gray-200 px-3 py-4">
           <div className="flex justify-between text-sm font-medium text-gray-900 mb-3">
-            <p>총계</p>
+            <p>Total</p>
             <span className="font-bold">
               {formatPrice(totalAmount)}
             </span>
@@ -161,7 +161,7 @@ export default function CartSidebar() {
             className="flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
             onClick={() => setIsCartOpen(false)}
           >
-            장바구니로 이동
+            Go to Cart
           </Link>
         </div>
       </div>

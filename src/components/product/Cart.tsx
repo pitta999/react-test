@@ -49,7 +49,7 @@ export default function Cart() {
           });
         }
       } catch (error) {
-        console.error('사용자 정보를 불러오는 중 오류가 발생했습니다:', error);
+        console.error('Error occurred while loading user information:', error);
       }
     };
 
@@ -76,17 +76,17 @@ export default function Cart() {
   // 주문 처리 함수
   const handleOrder = async () => {
     if (!user) {
-      toast.error("로그인이 필요합니다.");
+      toast.error("Login is required.");
       return;
     }
 
     if (items.length === 0) {
-      toast.error("장바구니가 비어있습니다.");
+      toast.error("Cart is empty.");
       return;
     }
 
     if (addressType === 'new' && !shippingAddress) {
-      toast.error("배송지를 입력해주세요.");
+      toast.error("Please enter the shipping address.");
       return;
     }
 
@@ -96,7 +96,7 @@ export default function Cart() {
       // 사용자 정보 가져오기
       const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
       if (!userDoc.exists()) {
-        throw new Error("사용자 정보를 찾을 수 없습니다.");
+        throw new Error("User information not found.");
       }
       
       const userData = userDoc.data();
@@ -156,22 +156,22 @@ export default function Cart() {
         createdBy: user.email || user.uid
       };
       
-      console.log('주문 데이터:', JSON.stringify(orderData));
+      console.log('Order data:', JSON.stringify(orderData));
       
       // Firestore에 주문 데이터 저장
       const orderRef = await addDoc(collection(db, COLLECTIONS.ORDERS), orderData);
-      console.log('주문 저장 완료, ID:', orderRef.id);
+      console.log('Order saved, ID:', orderRef.id);
       
       // 장바구니 비우기
       clearCart();
       
       // 주문 완료 페이지로 이동
-      toast.success(`주문이 완료되었습니다. 주문번호: ${orderId}`);
+      toast.success(`Order completed. Order number: ${orderId}`);
       navigate(`/order-confirm/${orderRef.id}`, { state: { orderId } });
       
     } catch (error) {
-      console.error("주문 처리 중 오류가 발생했습니다:", error);
-      toast.error("주문 처리 중 오류가 발생했습니다.");
+      console.error("Error occurred during order processing:", error);
+      toast.error("Error occurred during order processing.");
     } finally {
       setIsProcessing(false);
     }
@@ -181,13 +181,13 @@ export default function Cart() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">장바구니가 비어있습니다</h2>
-          <p className="text-gray-600 mb-8">상품을 추가해주세요.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Cart is empty</h2>
+          <p className="text-gray-600 mb-8">Please add products.</p>
           <Link
             to="/products"
             className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700"
           >
-            상품 목록으로 이동
+            Go to Product List
           </Link>
         </div>
       </div>
@@ -196,26 +196,26 @@ export default function Cart() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">장바구니</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Cart</h1>
       
       <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
-                상품 정보
+                Product Info
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                가격
+                Price
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                수량
+                Quantity
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                총 금액
+                Total
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                삭제
+                Delete
               </th>
             </tr>
           </thead>
@@ -282,7 +282,7 @@ export default function Cart() {
                     onClick={() => removeItem(item.id)}
                     className="text-red-600 hover:text-red-900"
                   >
-                    삭제
+                    Delete
                   </button>
                 </td>
               </tr>
@@ -293,7 +293,7 @@ export default function Cart() {
 
       <div className="bg-gray-50 p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-6">
-          <span className="text-lg font-medium text-gray-900">총 결제 금액</span>
+          <span className="text-lg font-medium text-gray-900">Total Payment</span>
           <span className="text-2xl font-bold text-primary-600">
             {formatPrice(parseFloat(totalAmount.toFixed(2)))}
           </span>
@@ -301,7 +301,7 @@ export default function Cart() {
 
         {/* 배송지 정보 섹션 수정 */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">배송지 정보</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Info</h3>
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="inline-flex items-center">
@@ -312,34 +312,34 @@ export default function Cart() {
                   onChange={(e) => setAddressType(e.target.value as 'company' | 'new')}
                   className="form-radio h-4 w-4 text-primary-600"
                 />
-                <span className="ml-2 text-sm text-gray-700">회사 주소 사용</span>
+                <span className="ml-2 text-sm text-gray-700">Use Company Address</span>
               </label>
               {addressType === 'company' && (
                 <div className="ml-6 space-y-2 p-4 bg-gray-50 rounded-md">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">회사명</p>
+                      <p className="text-sm font-medium text-gray-700">Company Name</p>
                       <p className="text-sm text-gray-600">{userData?.fullCompanyName || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">담당자</p>
+                      <p className="text-sm font-medium text-gray-700">Contact Name</p>
                       <p className="text-sm text-gray-600">{userData?.personInCharge?.name || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">전화번호</p>
+                      <p className="text-sm font-medium text-gray-700">Tel No</p>
                       <p className="text-sm text-gray-600">{userData?.telNo || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">휴대폰</p>
+                      <p className="text-sm font-medium text-gray-700">Mobile No</p>
                       <p className="text-sm text-gray-600">{userData?.mobNo || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">이메일</p>
+                      <p className="text-sm font-medium text-gray-700">Email</p>
                       <p className="text-sm text-gray-600">{userData?.email || '-'}</p>
                     </div>
                   </div>
                   <div className="mt-2">
-                    <p className="text-sm font-medium text-gray-700">주소</p>
+                    <p className="text-sm font-medium text-gray-700">Address</p>
                     <p className="text-sm text-gray-600">{userData?.companyAddress || '-'}</p>
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export default function Cart() {
                   onChange={(e) => setAddressType(e.target.value as 'company' | 'new')}
                   className="form-radio h-4 w-4 text-primary-600"
                 />
-                <span className="ml-2 text-sm text-gray-700">새로운 배송지</span>
+                <span className="ml-2 text-sm text-gray-700">New Shipping Address</span>
               </label>
               
               {addressType === 'new' && (
@@ -363,7 +363,7 @@ export default function Cart() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                        회사명
+                        Company Name
                       </label>
                       <input
                         type="text"
@@ -375,7 +375,7 @@ export default function Cart() {
                     </div>
                     <div>
                       <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
-                        담당자
+                        Contact Name
                       </label>
                       <input
                         type="text"
@@ -387,7 +387,7 @@ export default function Cart() {
                     </div>
                     <div>
                       <label htmlFor="telNo" className="block text-sm font-medium text-gray-700">
-                        전화번호
+                        Tel No
                       </label>
                       <input
                         type="text"
@@ -399,7 +399,7 @@ export default function Cart() {
                     </div>
                     <div>
                       <label htmlFor="mobNo" className="block text-sm font-medium text-gray-700">
-                        휴대폰
+                        Mobile No
                       </label>
                       <input
                         type="text"
@@ -411,7 +411,7 @@ export default function Cart() {
                     </div>
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        이메일
+                        Email
                       </label>
                       <input
                         type="email"
@@ -424,12 +424,12 @@ export default function Cart() {
                   </div>
                   <div>
                     <label htmlFor="shippingAddress" className="block text-sm font-medium text-gray-700">
-                      배송지 주소
+                      Shipping Address
                     </label>
                     <AddressInput
                       value={shippingAddress}
                       onChange={setShippingAddress}
-                      placeholder="주소를 입력하거나 선택해주세요"
+                      placeholder="Enter or select address"
                     />
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export default function Cart() {
 
         {/* 운송조건 섹션 */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">운송조건</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Terms</h3>
           <div className="flex space-x-4">
             <label className="inline-flex items-center">
               <input
@@ -470,7 +470,7 @@ export default function Cart() {
             to="/products"
             className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
-            계속 쇼핑하기
+            Continue Shopping
           </Link>
           <button
             onClick={handleOrder}
@@ -479,7 +479,7 @@ export default function Cart() {
               isProcessing ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
             }`}
           >
-            {isProcessing ? '처리 중...' : '주문하기'}
+            {isProcessing ? 'Processing...' : 'Order Now'}
           </button>
         </div>
       </div>

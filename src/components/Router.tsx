@@ -186,7 +186,7 @@ export default function Router({ isAuthenticated }: RouterProps) {
           <>
             {/* 비로그인 상태에서 접근 가능한 라우트 */}
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            {/* <Route path="/signup" element={<SignupPage />} /> */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* 비로그인 상태에서는 모든 경로를 로그인 페이지로 리다이렉트 */}

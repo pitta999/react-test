@@ -17,7 +17,7 @@ export default function OrderComplete() {
   const { orderId } = useParams();
   const location = useLocation();
   const state = location.state as LocationState;
-  const orderNumber = state?.orderId || '주문 번호 정보가 없습니다';
+  const orderNumber = state?.orderId || 'Order number information is missing';
 
   const [order, setOrder] = useState<Order | null>(null);
   const [orderUser, setOrderUser] = useState<User | null>(null);
@@ -59,7 +59,7 @@ export default function OrderComplete() {
           }
         }
       } catch (error) {
-        console.error('주문 정보를 불러오는 중 오류가 발생했습니다:', error);
+        console.error('Error loading order information:', error);
       } finally {
         setIsLoading(false);
       }
@@ -96,8 +96,8 @@ export default function OrderComplete() {
       await redirectToCheckout(session.id);
       
     } catch (error) {
-      console.error('결제 처리 중 오류가 발생했습니다:', error);
-      toast.error('결제 처리 중 오류가 발생했습니다. 나중에 다시 시도해주세요.');
+      console.error('Error processing payment:', error);
+      toast.error('Error processing payment. Please try again later.');
     } finally {
       setIsInitiatingPayment(false);
     }
@@ -121,10 +121,10 @@ export default function OrderComplete() {
         setOrder(updatedOrderData);
       }
 
-      toast.success('주문이 성공적으로 취소되었습니다.');
+      toast.success('Order cancelled successfully.');
     } catch (error) {
-      console.error('주문 취소 중 오류가 발생했습니다:', error);
-      toast.error('주문 취소 중 오류가 발생했습니다.');
+      console.error('Error cancelling order:', error);
+      toast.error('Error cancelling order.');
     }
   };
 
@@ -135,69 +135,69 @@ export default function OrderComplete() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">주문 확인 및 결제</h1>
-        <p className="text-gray-600">주문 정보를 확인하고 ??????????</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">Order Confirmation and Payment</h1>
+        <p className="text-gray-600">Check order information and make payment.</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex flex-col md:flex-row justify-between mb-6 pb-6 border-b border-gray-200">
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">주문 정보</h2>
-            <p className="text-gray-600">주문 번호: {orderNumber}</p>
-            <p className="text-gray-600">주문일: {order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</p>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Order Information</h2>
+            <p className="text-gray-600">Order Number: {orderNumber}</p>
+            <p className="text-gray-600">Order Date: {order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">결제 상태</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Payment Status</h2>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              결제 대기중
+              Pending Payment
             </span>
           </div>
         </div>
 
         {/* 주문자 배송지 정보 섹션 */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">주문자 배송지 정보</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Order Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">주문자 정보</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Order Information</h4>
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">회사명: {orderUser?.fullCompanyName}</p>
-                <p className="text-sm text-gray-600">담당자: {orderUser?.personInCharge.name}</p>
-                <p className="text-sm text-gray-600">이메일: {orderUser?.email}</p>
-                <p className="text-sm text-gray-600">전화번호: {orderUser?.telNo}</p>
-                <p className="text-sm text-gray-600">휴대폰: {orderUser?.mobNo}</p>
-                <p className="text-sm text-gray-600">주소: {orderUser?.companyAddress}</p>
+                <p className="text-sm text-gray-600">Company Name: {orderUser?.fullCompanyName}</p>
+                <p className="text-sm text-gray-600">Contact Person: {orderUser?.personInCharge.name}</p>
+                <p className="text-sm text-gray-600">Email: {orderUser?.email}</p>
+                <p className="text-sm text-gray-600">Phone Number: {orderUser?.telNo}</p>
+                <p className="text-sm text-gray-600">Mobile Number: {orderUser?.mobNo}</p>
+                <p className="text-sm text-gray-600">Address: {orderUser?.companyAddress}</p>
               </div>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">배송지 정보</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Shipping Information</h4>
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">회사명: {order?.shipTo?.companyName}</p>
-                <p className="text-sm text-gray-600">담당자: {order?.shipTo?.contactName}</p>
-                <p className="text-sm text-gray-600">전화번호: {order?.shipTo?.telNo}</p>
-                <p className="text-sm text-gray-600">휴대폰: {order?.shipTo?.mobNo}</p>
-                <p className="text-sm text-gray-600">이메일: {order?.shipTo?.email}</p>
-                <p className="text-sm text-gray-600">주소: {order?.shipTo?.address}</p>
+                <p className="text-sm text-gray-600">Company Name: {order?.shipTo?.companyName}</p>
+                <p className="text-sm text-gray-600">Contact Person: {order?.shipTo?.contactName}</p>
+                <p className="text-sm text-gray-600">Phone Number: {order?.shipTo?.telNo}</p>
+                <p className="text-sm text-gray-600">Mobile Number: {order?.shipTo?.mobNo}</p>
+                <p className="text-sm text-gray-600">Email: {order?.shipTo?.email}</p>
+                <p className="text-sm text-gray-600">Address: {order?.shipTo?.address}</p>
               </div>
             </div>
           </div>
           <div className="mt-4 flex justify-between">
-            <span className="text-gray-600">운송조건</span>
-            <span className="text-gray-900">{order?.shippingTerms === 'FOB' ? 'FOB (무료)' : 'CFR (운송료 포함)'}</span>
+            <span className="text-gray-600">Shipping Terms</span>
+            <span className="text-gray-900">{order?.shippingTerms === 'FOB' ? 'FOB (Free)' : 'CFR (Shipping Cost Included)'}</span>
           </div>
         </div>
 
         {order && (
           <>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">주문 상품</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Order Products</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가격</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수량</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">소계</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -240,17 +240,17 @@ export default function OrderComplete() {
 
             <div className="mt-8 border-t border-gray-200 pt-6">
               <div className="flex justify-between mb-2">
-                <span className="text-gray-600">소계</span>
+                <span className="text-gray-600">Subtotal</span>
                 <span className="text-gray-900">{formatPrice(parseFloat(order.totalAmount.toFixed(2)))}</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-600">배송비</span>
+                <span className="text-gray-600">Shipping Fee</span>
                 <span className="text-gray-900">
                   {order.shippingTerms === 'CFR' ? formatPrice(shippingCost) : '$0.00'}
                 </span>
               </div>
               <div className="flex justify-between font-medium">
-                <span className="text-gray-900">합계</span>
+                <span className="text-gray-900">Total</span>
                 <span className="text-primary-600">
                   {formatPrice(parseFloat((order.totalAmount + (order.shippingTerms === 'CFR' ? shippingCost : 0)).toFixed(2)))}
                 </span>
@@ -271,7 +271,7 @@ export default function OrderComplete() {
               onClick={handleCancelOrder}
               className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
-              주문 취소
+              Cancel Order
             </button>
             <PaymentButtons 
               order={order} 

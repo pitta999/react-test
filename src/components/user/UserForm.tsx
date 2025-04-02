@@ -146,8 +146,8 @@ export default function UserForm() {
 
     // 비밀번호 검사 (새 사용자 등록 시에만)
     if (!isEditMode) {
-      if (password.length < 8) {
-        setError("비밀번호는 8자리 이상이어야 합니다.");
+      if (password.length < 6) {
+        setError("비밀번호는 6자리 이상이어야 합니다.");
         return false;
       }
 

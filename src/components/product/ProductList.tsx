@@ -79,6 +79,8 @@ export default function ProductList() {
     direction: 'asc' | 'desc';
   }>({ key: 'sortOrder', direction: 'asc' });
 
+  const [isLoadingRelated, setIsLoadingRelated] = useState<{[key: string]: boolean}>({});
+
   // 정렬 함수
   const sortProducts = (products: ProductType[]) => {
     return [...products].sort((a, b) => {
@@ -383,43 +385,43 @@ export default function ProductList() {
               
               <div className="md:w-1/2">
                 <div className="mb-4">
-                  <span className="text-sm text-gray-500">카테고리</span>
+                  <span className="text-sm text-gray-500">Category</span>
                   <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ml-2">
                     {selectedProduct.categoryName}
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <span className="text-sm text-gray-500">가격</span>
+                  <span className="text-sm text-gray-500">Price</span>
                   <div className="text-xl font-semibold text-gray-900 mt-1">
                     {formatPrice(selectedProduct.price)}
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <span className="text-sm text-gray-500">재고 현황</span>
+                  <span className="text-sm text-gray-500">Stock Status</span>
                   <div className="mt-1">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       selectedProduct.stockStatus === 'ok' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {selectedProduct.stockStatus === 'ok' ? '정상' : '품절'}
+                      {selectedProduct.stockStatus === 'ok' ? 'OK' : 'NOK'}
                     </span>
                   </div>
                 </div>
                 
                 <div className="mb-8">
-                  <h3 className="text-sm text-gray-500 mb-2">상품 설명</h3>
+                  <h3 className="text-sm text-gray-500 mb-2">Product Description</h3>
                   <p className="text-gray-700 whitespace-pre-line">{selectedProduct.description}</p>
                 </div>
                 
                 <div className="text-xs text-gray-500">
-                  <div>등록일: {selectedProduct.createdAt}
+                  <div>Created Date: {selectedProduct.createdAt}
                     {selectedProduct.createdBy && ` (${selectedProduct.createdBy})`}
                   </div>
                   {selectedProduct.updatedAt && (
-                    <div>최근 수정일: {selectedProduct.updatedAt}
+                    <div>Last Updated Date: {selectedProduct.updatedAt}
                       {selectedProduct.updatedBy && ` (${selectedProduct.updatedBy})`}
                     </div>
                   )}
@@ -434,31 +436,55 @@ export default function ProductList() {
   
   // 연관 상품 가져오기
   const fetchRelatedProducts = async (productId: string) => {
+    setIsLoadingRelated(prev => ({ ...prev, [productId]: true }));
     try {
-      const relationshipsQuery = query(
+      // 1. sourceProductId로 조회
+      const sourceQuery = query(
         collection(db, COLLECTIONS.PRODUCT_RELATIONSHIPS),
         where("sourceProductId", "==", productId)
       );
       
-      const querySnapshot = await getDocs(relationshipsQuery);
-      const relatedProductIds: string[] = [];
+      // 2. targetProductId로 조회 (양방향 관계인 경우)
+      const targetQuery = query(
+        collection(db, COLLECTIONS.PRODUCT_RELATIONSHIPS),
+        where("targetProductId", "==", productId),
+        where("bidirectional", "==", true)
+      );
+
+      // 두 쿼리를 병렬로 실행
+      const [sourceSnapshot, targetSnapshot] = await Promise.all([
+        getDocs(sourceQuery),
+        getDocs(targetQuery)
+      ]);
+
+      const relatedProductIds = new Set<string>();
       
-      querySnapshot.forEach((doc) => {
+      // sourceProductId로 조회된 결과 처리
+      sourceSnapshot.forEach((doc) => {
         const relationship = doc.data() as ProductRelationship;
-        relatedProductIds.push(relationship.targetProductId);
+        relatedProductIds.add(relationship.targetProductId);
       });
 
-      // 연관 상품 정보 가져오기
+      // targetProductId로 조회된 결과 처리
+      targetSnapshot.forEach((doc) => {
+        const relationship = doc.data() as ProductRelationship;
+        relatedProductIds.add(relationship.sourceProductId);
+      });
+
+      // 연관 상품 정보를 한 번에 가져오기
       const relatedProductsData: ProductType[] = [];
-      for (const id of relatedProductIds) {
+      const productPromises = Array.from(relatedProductIds).map(async (id) => {
         const productDoc = await getDoc(doc(db, COLLECTIONS.PRODUCTS, id));
         if (productDoc.exists()) {
-          relatedProductsData.push({
+          return {
             ...productDoc.data() as ProductType,
             id: productDoc.id,
-          });
+          };
         }
-      }
+      });
+
+      const products = await Promise.all(productPromises);
+      relatedProductsData.push(...products.filter((product): product is ProductType => product !== undefined));
 
       setRelatedProducts(prev => ({
         ...prev,
@@ -467,6 +493,8 @@ export default function ProductList() {
     } catch (error) {
       console.error("Error fetching related products:", error);
       toast.error("연관 상품을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoadingRelated(prev => ({ ...prev, [productId]: false }));
     }
   };
 
@@ -514,86 +542,107 @@ export default function ProductList() {
     const isSelected = selectedProductId === product.id;
     const inCart = isInCart(product.id);
     const cartQuantity = getCartQuantity(product.id);
+    const isLoading = isLoadingRelated[product.id];
 
     return (
       <>
         <tr key={product.id} className={`hover:bg-gray-50 ${inCart ? 'bg-blue-50' : ''}`}>
-          <td className="w-2/5 px-6 py-1 whitespace-nowrap">
+          <td className="px-4 py-2 whitespace-nowrap">
             <div className="flex items-center">
               <div className="h-8 w-8 flex-shrink-0">
                 <img className="h-8 w-8 rounded-full object-cover" src={product.imageUrl.thumbnail} alt={product.name} />
               </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-gray-900">{product.name}</div>
+              <div className="ml-3">
+                <div className="text-sm font-medium text-gray-900 truncate max-w-[320px]" title={product.name}>{product.name}</div>
               </div>
             </div>
           </td>
-          <td className="w-1/10 px-6 py-1 whitespace-nowrap">
+          <td className="px-1 py-2 whitespace-nowrap">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               product.stockStatus === 'ok' 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'
             }`}>
-              {product.stockStatus === 'ok' ? '정상' : '품절'}
+              {product.stockStatus === 'ok' ? 'OK' : 'NOK'}
             </span>
           </td>
-          <td className="w-1/5 px-6 py-1 whitespace-nowrap text-right">
+          <td className="px-1 py-2 whitespace-nowrap text-right">
             <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
           </td>
-          <td className="w-1/5 px-6 py-1 whitespace-nowrap text-right">
+          <td className="px-1 py-2 whitespace-nowrap text-right">
             {discountPrice ? (
               <div className="text-sm text-primary-600 font-semibold">
                 {formatPrice(discountPrice)}
                 <span className="text-xs text-gray-500 ml-1">
-                  ({Math.round((1 - discountPrice / product.price) * 100)}% 할인)
+                  ({Math.round((1 - discountPrice / product.price) * 100)}% ↓)
                 </span>
               </div>
             ) : (
               <div className="text-sm text-gray-500">-</div>
             )}
           </td>
-          <td className="w-1/10 px-6 py-1 whitespace-nowrap text-right">
+          <td className="px-1 py-2 whitespace-nowrap text-right">
             <input
               type="number"
               min="1"
               value={inCart ? cartQuantity : (quantities[product.id] || 1)}
               onChange={(e) => handleQuantityChange(product.id, e.target.value)}
-              className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+              className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
             />
           </td>
-          <td className="w-1/5 px-6 py-1 whitespace-nowrap text-right">
+          <td className="px-1 py-2 whitespace-nowrap text-right">
             <div className="text-sm font-semibold text-primary-600">
               {formatPrice(total)}
             </div>
           </td>
-          <td className="w-1/5 px-6 py-1 whitespace-nowrap text-sm font-medium">
-            <button
-              onClick={() => fetchProductDetail(product.id)}
-              className="px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 mr-3 transition-colors"
-            >
-              Detail
-            </button>
-            <button 
-              onClick={() => handleCartToggle(product)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors mr-3 ${
-                inCart 
-                  ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              disabled={product.stockStatus !== 'ok'}
-            >
-              Cart
-            </button>
-            <button
-              onClick={() => handleRelatedProductsClick(product.id)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                isSelected 
-                  ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Related
-            </button>
+          <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+            <div className="flex items-center space-x-2 justify-end">
+              <button
+                onClick={() => handleRelatedProductsClick(product.id)}
+                className={`w-16 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                  isSelected 
+                    ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  </>
+                ) : (
+                  'Related'
+                )}
+              </button>
+              <button
+                onClick={() => fetchProductDetail(product.id)}
+                className="w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z"
+                    fill="#000000"
+                  />
+                </svg>
+              </button>
+              <button 
+                onClick={() => handleCartToggle(product)}
+                className={`w-16 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                  inCart 
+                    ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                disabled={product.stockStatus !== 'ok'}
+              >
+                Cart
+              </button>
+              
+            </div>
           </td>
         </tr>
         {isSelected && relatedProducts[product.id] && relatedProducts[product.id].length > 0 && (
@@ -608,38 +657,38 @@ export default function ProductList() {
     <div className="mb-8">
       <h2 className="text-xl font-bold text-gray-900 mb-4">{title}</h2>
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             <tr>
               <th 
-                className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="w-[400px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('name')}
               >
-                상품명 {sortConfig.key === 'name' && <SortIcon columnKey="name" />}
+                Product Name {sortConfig.key === 'name' && <SortIcon columnKey="name" />}
               </th>
               <th 
-                className="w-1/10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="w-[40px] px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('stockStatus')}
               >
-                재고 {sortConfig.key === 'stockStatus' && <SortIcon columnKey="stockStatus" />}
+                Stock {sortConfig.key === 'stockStatus' && <SortIcon columnKey="stockStatus" />}
               </th>
               <th 
-                className="w-1/5 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="w-[70px] px-1 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('price')}
               >
-                소비자가 {sortConfig.key === 'price' && <SortIcon columnKey="price" />}
+                MRSP {sortConfig.key === 'price' && <SortIcon columnKey="price" />}
               </th>
-              <th className="w-1/5 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                공급가
+              <th className="w-[120px] px-1 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Supplier Price
               </th>
-              <th className="w-1/10 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                수량
+              <th className="w-[100px] px-1 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Quantity
               </th>
-              <th className="w-1/5 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                합계
+              <th className="w-[120px] px-1 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total
               </th>
-              <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                작업
+              <th className="w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                
               </th>
             </tr>
           </thead>
@@ -647,8 +696,8 @@ export default function ProductList() {
             {sortProducts(products).map((product) => renderProductRow(product))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                  등록된 상품이 없습니다.
+                <td colSpan={7} className="px-4 py-4 text-center text-sm text-gray-500">
+                  No products registered.
                 </td>
               </tr>
             )}
@@ -666,9 +715,9 @@ export default function ProductList() {
       <>
         {Object.entries(categorizedProducts).map(([categoryName, categoryProducts]) => (
           <>
-            <tr key={`category-${categoryName}`} className="bg-gray-300">
-              <td colSpan={7} className="px-6 py-1">
-                <div className="text-sm font-medium text-gray-700">연관 상품: {categoryName}</div>
+            <tr key={`category-${categoryName}`} className="bg-gray-200">
+              <td colSpan={7} className="px-4 py-1">
+                <div className="text-sm font-medium text-gray-700">Related Products : <span className="font-bold">{categoryName}</span></div>
               </td>
             </tr>
             {categoryProducts.map((product) => {
@@ -677,72 +726,89 @@ export default function ProductList() {
               const inCart = isInCart(product.id);
               const cartQuantity = getCartQuantity(product.id);
               return (
-                <tr key={product.id} className={`bg-gray-100 hover:bg-gray-200 ${inCart ? 'bg-blue-50' : ''}`}>
-                  <td className="w-2/5 px-6 py-1 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                <tr key={product.id} className={`bg-gray-50 hover:bg-gray-100 ${inCart ? 'bg-blue-50' : ''}`}>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-8 flex-shrink-0"></div>
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-[320px]" title={product.name}>{product.name}</div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="w-1/10 px-6 py-1 whitespace-nowrap">
+                  <td className="px-1 py-2 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       product.stockStatus === 'ok' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {product.stockStatus === 'ok' ? '정상' : '품절'}
+                      {product.stockStatus === 'ok' ? 'OK' : 'NOK'}
                     </span>
                   </td>
-                  <td className="w-1/5 px-6 py-1 whitespace-nowrap text-right">
+                  <td className="px-1 py-2 whitespace-nowrap text-right">
                     <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
                   </td>
-                  <td className="w-1/5 px-6 py-1 whitespace-nowrap text-right">
+                  <td className="px-1 py-2 whitespace-nowrap text-right">
                     {discountPrice ? (
                       <div className="text-sm text-primary-600 font-semibold">
                         {formatPrice(discountPrice)}
                         <span className="text-xs text-gray-500 ml-1">
-                          ({Math.round((1 - discountPrice / product.price) * 100)}% 할인)
+                          ({Math.round((1 - discountPrice / product.price) * 100)}% ↓)
                         </span>
                       </div>
                     ) : (
                       <div className="text-sm text-gray-500">-</div>
                     )}
                   </td>
-                  <td className="w-1/10 px-6 py-1 whitespace-nowrap text-right">
+                  <td className="px-1 py-2 whitespace-nowrap text-right">
                     <input
                       type="number"
                       min="1"
                       value={inCart ? cartQuantity : (quantities[product.id] || 1)}
                       onChange={(e) => handleQuantityChange(product.id, e.target.value)}
-                      className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+                      className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
                     />
                   </td>
-                  <td className="w-1/5 px-6 py-1 whitespace-nowrap text-right">
+                  <td className="px-1 py-2 whitespace-nowrap text-right">
                     <div className="text-sm font-semibold text-primary-600">
                       {formatPrice(total)}
                     </div>
                   </td>
-                  <td className="w-1/5 px-6 py-1 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => fetchProductDetail(product.id)}
-                      className="px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 mr-3 transition-colors"
-                    >
-                      Detail
-                    </button>
-                    <button
-                      onClick={() => handleCartToggle(product)}
-                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                        inCart 
-                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      disabled={product.stockStatus !== 'ok'}
-                    >
-                      Cart
-                    </button>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center space-x-2 justify-end">
+                      <button
+                        onClick={() => fetchProductDetail(product.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            fill-rule="evenodd"
+                            clip-rule="evenodd"
+                            d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z"
+                            fill="#000000"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleCartToggle(product)}
+                        className={`w-16 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                          inCart 
+                            ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        disabled={product.stockStatus !== 'ok'}
+                      >
+                        Cart
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
             })}
           </>
         ))}
+        <tr className="bg-gray-200">
+          <td colSpan={7} className=""></td>
+        </tr>
       </>
     );
   };
@@ -753,13 +819,13 @@ export default function ProductList() {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-[1600px]">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">상품 목록</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Product List</h1>
           <div className="flex items-center">
             <input
               type="text"
-              placeholder="상품 검색..."
+              placeholder="Search product..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"

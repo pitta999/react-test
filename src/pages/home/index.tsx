@@ -1,15 +1,13 @@
-import Header from "components/common/Header";
-import Footer from "components/common/Footer";
+import { Header, Footer } from "components/common";
+import { ProductList } from "components/product";
 
-import ProductList from "components/product/ProductList";
-import Carousel from "components/common/Carousel";
-
-export default function Home() {
+export default function ProductListPage() {
   return (
     <>
       <Header />
-      {/* <Carousel /> */}
-      <ProductList />
+      <main className="container mx-auto px-4 py-8">
+        <ProductList />
+      </main>
       <Footer />
     </>
   );

@@ -35,8 +35,8 @@ export default function PaymentButtons({ order, userId, userEmail, onOrderUpdate
       await redirectToCheckout(session.id);
       
     } catch (error) {
-      console.error('결제 처리 중 오류가 발생했습니다:', error);
-      toast.error('결제 처리 중 오류가 발생했습니다. 나중에 다시 시도해주세요.');
+      console.error('Payment processing error:', error);
+      toast.error('Payment processing error. Please try again later.');
     } finally {
       setIsInitiatingPayment(false);
     }
@@ -54,7 +54,7 @@ export default function PaymentButtons({ order, userId, userEmail, onOrderUpdate
         updatedBy: userEmail || userId
       });
 
-      toast.success('T/T 결제가 신청되었습니다.');
+      toast.success('T/T payment request submitted.');
       
       // 주문 정보 업데이트 콜백 실행
       if (onOrderUpdate) {
@@ -65,8 +65,8 @@ export default function PaymentButtons({ order, userId, userEmail, onOrderUpdate
         }
       }
     } catch (error) {
-      console.error('T/T 결제 신청 중 오류가 발생했습니다:', error);
-      toast.error('T/T 결제 신청 중 오류가 발생했습니다.');
+      console.error('T/T payment request error:', error);
+      toast.error('T/T payment request error.');
     } finally {
       setIsProcessingTT(false);
     }
@@ -81,7 +81,7 @@ export default function PaymentButtons({ order, userId, userEmail, onOrderUpdate
           isProcessingTT ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
-        {isProcessingTT ? '처리 중...' : 'T/T 결제'}
+        {isProcessingTT ? 'Processing...' : 'T/T Payment'}
       </button>
       <button
         onClick={handleStripePayment}
@@ -90,7 +90,7 @@ export default function PaymentButtons({ order, userId, userEmail, onOrderUpdate
           isInitiatingPayment ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
-        {isInitiatingPayment ? '처리 중...' : '신용카드 결제'}
+        {isInitiatingPayment ? 'Processing...' : 'Credit Card Payment'}
       </button>
     </div>
   );

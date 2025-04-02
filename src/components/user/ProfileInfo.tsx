@@ -84,7 +84,7 @@ export default function ProfileInfo() {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700">사용자 정보를 찾을 수 없습니다.</p>
+              <p className="text-sm text-red-700">User information not found.</p>
             </div>
           </div>
         </div>
@@ -95,102 +95,102 @@ export default function ProfileInfo() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">내 정보</h2>
+        <h2 className="text-2xl font-bold text-gray-900">My Information</h2>
         <Logout />
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-6 space-y-8">
           <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">기본 정보</h3>
+            <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-center">
-                <span className="w-32 text-sm font-medium text-gray-500">이메일</span>
+                <span className="w-32 text-sm font-medium text-gray-500">Email</span>
                 <span className="text-sm text-gray-900">{userInfo.email}</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">회사 정보</h3>
+            <h3 className="text-lg font-medium text-gray-900">Company Information</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">회사명</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Company Name</span>
                 <span className="text-sm text-gray-900">{userInfo.fullCompanyName}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">상호명</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Trading Name</span>
                 <span className="text-sm text-gray-900">{userInfo.tradingName}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">회사 주소</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Company Address</span>
                 <span className="text-sm text-gray-900">{userInfo.companyAddress}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">국가 코드</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Country Code</span>
                 <span className="text-sm text-gray-900">{userInfo.countryCode}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">VAT 번호</span>
+                <span className="w-48 text-sm font-medium text-gray-500">VAT Number</span>
                 <span className="text-sm text-gray-900">{userInfo.vatNumber}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">담당자 정보</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Person in Charge</span>
                 <span className="text-sm text-gray-900">
                   {userInfo.personInCharge.name} ({userInfo.personInCharge.title})
                 </span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">담당자 이메일</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Person in Charge Email</span>
                 <span className="text-sm text-gray-900">{userInfo.personInCharge.email}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">연락처</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Contact</span>
                 <span className="text-sm text-gray-900">
                   Tel: {userInfo.telNo} / Mob: {userInfo.mobNo}
                 </span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">웹사이트</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Web Site</span>
                 <span className="text-sm text-gray-900">{userInfo.webAddress}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">사업자 유형</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Business Type</span>
                 <span className="text-sm text-gray-900">{userInfo.businessType}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">설치 서비스</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Installation Service</span>
                 <span className="text-sm text-gray-900">{userInfo.installationService}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">취급 제품</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Sales Products</span>
                 <span className="text-sm text-gray-900">{userInfo.salesProducts}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">거래 금액</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Trade Amount</span>
                 <span className="text-sm text-gray-900">{userInfo.tradeAmount}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">선호 모델</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Preferential Model</span>
                 <span className="text-sm text-gray-900">{userInfo.preferentialModel}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">예상 구매액</span>
+                <span className="w-48 text-sm font-medium text-gray-500">Estimated Purchase</span>
                 <span className="text-sm text-gray-900">{userInfo.estimatedPurchase}</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">등록 정보</h3>
+            <h3 className="text-lg font-medium text-gray-900">Registration Information</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-center">
-                <span className="w-32 text-sm font-medium text-gray-500">가입일</span>
+                <span className="w-32 text-sm font-medium text-gray-500">Registration Date</span>
                 <span className="text-sm text-gray-900">{userInfo.createdAt}</span>
               </div>
               {userInfo.updatedAt && (
                 <div className="flex items-center">
-                  <span className="w-32 text-sm font-medium text-gray-500">최근 수정일</span>
+                  <span className="w-32 text-sm font-medium text-gray-500">Last Updated</span>
                   <span className="text-sm text-gray-900">{userInfo.updatedAt}</span>
                 </div>
               )}
@@ -202,7 +202,7 @@ export default function ProfileInfo() {
               onClick={handleEdit}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              정보 수정
+              Edit Information
             </button>
           </div>
         </div>

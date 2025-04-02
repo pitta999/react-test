@@ -156,13 +156,13 @@ export default function ProfileEdit() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">내 정보 수정</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Edit My Information</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-6 space-y-8">
           <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">회사 정보</h3>
+            <h3 className="text-lg font-medium text-gray-900">Company Information</h3>
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label htmlFor="fullCompanyName" className="block text-sm font-medium text-gray-500">
@@ -217,7 +217,7 @@ export default function ProfileEdit() {
                   value={vatNumber}
                   onChange={(e) => setVatNumber(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="VAT 번호를 입력하세요"
+                  placeholder="VAT Number"
                   required
                 />
               </div>
@@ -273,7 +273,7 @@ export default function ProfileEdit() {
                   value={personInChargeEmail}
                   onChange={(e) => setPersonInChargeEmail(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="담당자 이메일을 입력하세요"
+                  placeholder="Enter the email of the person in charge"
                   required
                 />
               </div>
@@ -432,14 +432,14 @@ export default function ProfileEdit() {
               onClick={() => navigate("/profile")}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              취소
+              Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isLoading ? "처리 중..." : "수정하기"}
+              {isLoading ? "Processing..." : "Update"}
             </button>
           </div>
         </div>
