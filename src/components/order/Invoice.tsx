@@ -13,6 +13,12 @@ interface InvoiceProps {
   myInfo: MyInfo;
 }
 
+function removeLineBreaks(text: string) {
+  if (!text) return '';
+  // 모든 개행 문자(\n, \r\n 등)를 공백으로 대체
+  return text.replace(/(\r\n|\n|\r)/gm, " ");
+}
+
 export default function Invoice({ order, user, myInfo }: InvoiceProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -52,7 +58,7 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
     autoTable(doc, {
       body: [
         [{ content: 'PROFORMA INVOICE', styles: { fontStyle: 'bold' , fontSize: 18} }, 
-         { content: `Invoice No : 111111\nDate : ${new Date().toLocaleDateString()}` }],
+         { content: `Invoice No : ${order.orderId}\nDate : ${new Date().toLocaleDateString()}` }],
         [{ content: 'Shipper/Exporter', styles: { fontStyle: 'bold' } }, 
          { content: 'Sold to / Bill to', styles: { fontStyle: 'bold' } }],
         [{ content: `${myInfo.companyName}\nAddress : ${myInfo.address}\nTel : ${myInfo.telNo}\nFax : ${myInfo.faxNo}`}, 
@@ -67,7 +73,7 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
       startY: 20,
       theme: 'grid',
       
-      styles: { fontSize: 10, font: 'helvetica', fontStyle: 'normal', },
+      styles: { fontSize: 8, font: 'helvetica', fontStyle: 'normal', overflow: 'hidden', cellPadding: 1  },
       columnStyles: {
         0: { cellWidth: 90 },
         1: { cellWidth: 90 },        
@@ -90,7 +96,7 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
       ],
       startY: (doc as any).lastAutoTable.finalY,
       theme: 'grid',
-      styles: { fontSize: 10, font: 'helvetica', fontStyle: 'normal', },
+      styles: { fontSize: 8, font: 'helvetica', fontStyle: 'normal', overflow: 'hidden', cellPadding: 1  },
       columnStyles: {
         0: { cellWidth: 45 },
         1: { cellWidth: 45 },
@@ -145,7 +151,7 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
           
           tableRows.push([
             item.name,
-            products[item.productId]?.description || '',
+            removeLineBreaks(products[item.productId]?.description || ''),
             products[item.productId]?.hsCode || '',
             products[item.productId]?.origin || '',
             item.quantity.toString(),
@@ -177,20 +183,18 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
 
     // 테이블 생성
     autoTable(doc, {
-
       body: tableRows,
       startY: (doc as any).lastAutoTable.finalY,
       theme: 'grid',
-
-      styles: { fontSize: 10 },
+      styles: { fontSize: 8 , overflow: 'hidden', cellPadding: 1 },
       columnStyles: {
-        0: { cellWidth: 50 , overflow: 'hidden' , cellPadding: 1},
-        1: { cellWidth: 40 , overflow: 'hidden' , cellPadding: 1},
-        2: { cellWidth: 20 , overflow: 'hidden' , cellPadding: 1},
-        3: { cellWidth: 15 , overflow: 'hidden', halign: 'center' , cellPadding: 1},
-        4: { cellWidth: 15 , overflow: 'hidden', halign: 'right' ,cellPadding: 1},
-        5: { cellWidth: 15 , overflow: 'hidden', halign: 'right' ,cellPadding: 1},
-        6: { cellWidth: 25 , overflow: 'hidden', halign: 'right' ,cellPadding: 1}
+        0: { cellWidth: 50},
+        1: { cellWidth: 40 },
+        2: { cellWidth: 20},
+        3: { cellWidth: 15, halign: 'center' },
+        4: { cellWidth: 15, halign: 'right'},
+        5: { cellWidth: 15, halign: 'right'},
+        6: { cellWidth: 25, halign: 'right'}
       },
       footStyles: { fillColor: [200, 200, 200] }
     });
@@ -217,7 +221,7 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
       ],
       startY: (doc as any).lastAutoTable.finalY + 5,
       theme: 'plain',
-      styles: { fontSize: 10 },
+      styles: { fontSize: 8 },
       columnStyles: {
         0: { cellWidth: 35 , overflow: 'hidden' , cellPadding: 0},
         1: { cellWidth: 155 , overflow: 'hidden' , cellPadding: 0},
@@ -234,22 +238,22 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
     // doc.text(`Status: ${order.status}`, 20, 135);
 
     // 메모
-    if (order.notes) {
-      doc.setFontSize(12);
-      doc.text('Notes:', 20, (doc as any).lastAutoTable.finalY + 20);
-      doc.setFontSize(10);
-      doc.text(order.notes, 20, (doc as any).lastAutoTable.finalY + 25);
-    }
+    // if (order.notes) {
+    //   doc.setFontSize(12);
+    //   doc.text('Notes:', 20, (doc as any).lastAutoTable.finalY + 20);
+    //   doc.setFontSize(10);
+    //   doc.text(order.notes, 20, (doc as any).lastAutoTable.finalY + 25);
+    // }
 
-    if (download) {
+      if (download) {
       // PDF 다운로드
       doc.save(`invoice-${order.orderId}.pdf`);
-    } else {
+      } else {
       // PDF 미리보기 URL 생성
       const pdfUrl = doc.output('datauristring');
-      setPdfUrl(pdfUrl);
-      setShowPreview(true);
-    }
+        setPdfUrl(pdfUrl);
+        setShowPreview(true);
+      }
   };
 
   return (
@@ -313,4 +317,4 @@ export default function Invoice({ order, user, myInfo }: InvoiceProps) {
       )}
     </>
   );
-} 
+}

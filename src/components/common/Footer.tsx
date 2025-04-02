@@ -7,13 +7,13 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="flex items-center space-x-6">
             <Link to="/about" className="text-gray-600 hover:text-gray-900">
-              회사 소개
+              company introduction
             </Link>
             <Link to="/terms" className="text-gray-600 hover:text-gray-900">
-              이용약관
+              terms of service
             </Link>
             <Link to="/privacy" className="text-gray-600 hover:text-gray-900">
-              개인정보처리방침
+              privacy policy
             </Link>
           </div>
           

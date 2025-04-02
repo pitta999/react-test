@@ -57,7 +57,7 @@ function Dropdown({ label, items, isAdmin, isSuperAdmin }: DropdownProps) {
 
 export default function Header() {
   const { user, isAdmin, isSuperAdmin } = useContext(AuthContext);
-  const { totalItems } = useCart();
+  const { items } = useCart();
 
   console.log("Header - isAdmin:", isAdmin, "isSuperAdmin:", isSuperAdmin, "user:", user); // 디버깅용
 
@@ -98,17 +98,17 @@ export default function Header() {
                     isSuperAdmin={isSuperAdmin}
                   />
                 )}
-                {/* <Link to="/posts" className="text-gray-600 hover:text-gray-900">
-                  게시글
-                </Link> */}
+                <Link to="/posts" className="text-gray-600 hover:text-gray-900">
+                  Post
+                </Link>
                 <Link to="/products" className="text-gray-600 hover:text-gray-900">
                   Product
                 </Link>
                 <Link to="/cart" className="text-gray-600 hover:text-gray-900 relative">
                   Cart
-                  {totalItems > 0 && (
+                  {items.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {totalItems}
+                      {items.length}
                     </span>
                   )}
                 </Link>

@@ -12,24 +12,9 @@ export default function CartSidebar() {
     totalAmount 
   } = useCart();
 
-  const [editingQuantity, setEditingQuantity] = useState<{ [key: string]: number }>({});
-
   const handleQuantityChange = (itemId: string, value: string) => {
     const numValue = parseInt(value) || 1;
-    setEditingQuantity(prev => ({
-      ...prev,
-      [itemId]: numValue
-    }));
-  };
-
-  const handleQuantityBlur = (itemId: string) => {
-    const quantity = editingQuantity[itemId] || 1;
-    updateQuantity(itemId, quantity);
-    setEditingQuantity(prev => {
-      const newState = { ...prev };
-      delete newState[itemId];
-      return newState;
-    });
+    updateQuantity(itemId, numValue);
   };
 
   // 가격 포맷팅 함수
@@ -94,41 +79,13 @@ export default function CartSidebar() {
                     </div>
                     <div className="flex-1 flex items-end justify-between text-xs mt-1">
                       <div className="flex items-center">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="px-1.5 py-0.5 border rounded-l text-xs"
-                        >
-                          -
-                        </button>
-                        {editingQuantity[item.id] !== undefined ? (
-                          <input
-                            type="number"
-                            min="1"
-                            value={editingQuantity[item.id]}
-                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                            onBlur={() => handleQuantityBlur(item.id)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                handleQuantityBlur(item.id);
-                              }
-                            }}
-                            className="w-12 px-1.5 py-0.5 border-t border-b text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
-                            autoFocus
-                          />
-                        ) : (
-                          <span 
-                            className="px-3 py-0.5 border-t border-b cursor-pointer text-xs"
-                            onClick={() => setEditingQuantity(prev => ({ ...prev, [item.id]: item.quantity }))}
-                          >
-                            {item.quantity}
-                          </span>
-                        )}
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="px-1.5 py-0.5 border rounded-r text-xs"
-                        >
-                          +
-                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                          className="w-16 px-1.5 py-0.5 border rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        />
                       </div>
 
                       <div className="flex">

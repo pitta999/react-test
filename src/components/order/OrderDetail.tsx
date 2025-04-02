@@ -208,7 +208,7 @@ export default function OrderDetail() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Order information not found</h2>
           <p className="text-gray-600 mb-8">The requested order information may not exist or you do not have access.</p>
           <Link
-            to={isAdmin ? "/admin/orders" : "/order-history"}
+            to="/order-history"
             className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700"
           >
             Go to Order History
@@ -223,7 +223,7 @@ export default function OrderDetail() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
         <Link
-          to={isAdmin ? "/admin/orders" : "/order-history"}
+          to="/order-history"
           className="text-primary-600 hover:text-primary-700"
         >
           Go to Order History
@@ -354,12 +354,12 @@ export default function OrderDetail() {
         </div>
         <div className="px-4 py-5 sm:p-6">
           <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Total</span>
-            <span className="text-gray-900">{formatPrice(order.totalAmount)}</span>
+            <span className="text-gray-600">Subtotal</span>
+            <span className="text-gray-900">{formatPrice(order.subtotal)}</span>
           </div>
           <div className="flex justify-between mb-2">
             <span className="text-gray-600">Shipping Fee</span>
-            <span className="text-gray-900">$0.00</span>
+            <span className="text-gray-900">{formatPrice(order.shippingCost || 0)}</span>
           </div>
           <div className="flex justify-between font-medium border-t border-gray-200 pt-4 mt-4">
             <span className="text-gray-900">Total</span>
