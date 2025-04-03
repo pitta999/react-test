@@ -286,7 +286,7 @@ export default function SheetUpload() {
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {isSaving ? '저장 중...' : '저장하기'}
+            {isSaving ? '수정 중...' : '수정하기'}
           </button>
         </div>
       </div>

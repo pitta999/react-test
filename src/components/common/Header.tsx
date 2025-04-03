@@ -90,7 +90,7 @@ export default function Header() {
                 )}
                 {(isAdmin || isSuperAdmin) && (
                   <Dropdown
-                    label="History"
+                    label="Order"
                     items={[
                       { label: "Order History", to: "/admin/orders" }
                     ]}
@@ -112,14 +112,14 @@ export default function Header() {
                     </span>
                   )}
                 </Link>
-                <Link to="/profile" className="text-gray-600 hover:text-gray-900">
-                  Profile
-                </Link>
                 <Link
                   to="/order-history"
                   className="text-gray-600 hover:text-gray-900"
                 >
                   Order History
+                </Link>
+                <Link to="/profile" className="text-gray-600 hover:text-gray-900">
+                  Profile
                 </Link>
               </>
             ) : (

@@ -14,9 +14,12 @@ interface UserDetailType {
   fullCompanyName: string;
   tradingName: string;
   companyAddress: string;
+  countryCode: string;
+  vatNumber: string;
   personInCharge: {
     name: string;
     title: string;
+    email: string;
   };
   telNo: string;
   mobNo: string;
@@ -183,94 +186,123 @@ export default function UserDetail() {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 space-y-8">
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">기본 정보</h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center">
-                <span className="w-32 text-sm font-medium text-gray-500">이메일</span>
-                <span className="text-sm text-gray-900">{userData.email}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-32 text-sm font-medium text-gray-500">회원 등급</span>
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
-                  {userData.categoryName} (Level {userData.categoryLevel})
-                </span>
-              </div>
+        <div className="p-6">
+          {/* 기본 정보 테이블 */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">기본 정보</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 w-1/3">이메일</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.email}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">회원 등급</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
+                        {userData.categoryName} (Level {userData.categoryLevel})
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">국가 코드</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.countryCode}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">VAT 번호</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.vatNumber}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">회사 정보</h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">회사명</span>
-                <span className="text-sm text-gray-900">{userData.fullCompanyName}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">상호명</span>
-                <span className="text-sm text-gray-900">{userData.tradingName}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">회사 주소</span>
-                <span className="text-sm text-gray-900">{userData.companyAddress}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">담당자 정보</span>
-                <span className="text-sm text-gray-900">
-                  {userData.personInCharge.name} ({userData.personInCharge.title})
-                </span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">연락처</span>
-                <span className="text-sm text-gray-900">
-                  Tel: {userData.telNo} / Mob: {userData.mobNo}
-                </span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">웹사이트</span>
-                <span className="text-sm text-gray-900">{userData.webAddress}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">사업자 유형</span>
-                <span className="text-sm text-gray-900">{userData.businessType}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">설치 서비스</span>
-                <span className="text-sm text-gray-900">{userData.installationService}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">취급 제품</span>
-                <span className="text-sm text-gray-900">{userData.salesProducts}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">거래 금액</span>
-                <span className="text-sm text-gray-900">{userData.tradeAmount}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">선호 모델</span>
-                <span className="text-sm text-gray-900">{userData.preferentialModel}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-48 text-sm font-medium text-gray-500">예상 구매액</span>
-                <span className="text-sm text-gray-900">{userData.estimatedPurchase}</span>
-              </div>
+          {/* 회사 정보 테이블 */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">회사 정보</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 w-1/3">회사명</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.fullCompanyName}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">상호명</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.tradingName}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">회사 주소</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{userData.companyAddress}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">담당자 정보</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {userData.personInCharge.name} ({userData.personInCharge.title})
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">담당자 이메일</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.personInCharge.email}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">연락처</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      Tel: {userData.telNo} / Mob: {userData.mobNo}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">웹사이트</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.webAddress}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">사업자 유형</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.businessType}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">설치 서비스</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.installationService}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">취급 제품</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{userData.salesProducts}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">거래 금액</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.tradeAmount}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">선호 모델</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.preferentialModel}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">예상 구매액</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.estimatedPurchase}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">등록 정보</h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center">
-                <span className="w-32 text-sm font-medium text-gray-500">가입일</span>
-                <span className="text-sm text-gray-900">{userData.createdAt}</span>
-              </div>
-              {userData.updatedAt && (
-                <div className="flex items-center">
-                  <span className="w-32 text-sm font-medium text-gray-500">최근 수정일</span>
-                  <span className="text-sm text-gray-900">{userData.updatedAt}</span>
-                </div>
-              )}
+          {/* 등록 정보 테이블 */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">등록 정보</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 w-1/3">가입일</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.createdAt}</td>
+                  </tr>
+                  {userData.updatedAt && (
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">최근 수정일</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{userData.updatedAt}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
