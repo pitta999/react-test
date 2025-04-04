@@ -8,7 +8,8 @@ import Loader from 'components/common/Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
 import Invoice from './Invoice';
-import PaymentButtons from './PaymentButtons';
+import TTPayment from './TTPayment';
+import StripePayment from './StripePayment';
 
 export default function OrderDetail() {
   const { orderId } = useParams();
@@ -369,27 +370,53 @@ export default function OrderDetail() {
       </div>
 
       {order.paymentStatus === 'pending' && order.status === 'pending' && (
-        <div className="mt-6 flex justify-between items-center">
-          <div className="flex space-x-4">
-            {orderUser && myInfo && (
-              <Invoice order={order} user={orderUser} myInfo={myInfo} />
-            )}
+        <>
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Invoice</h3>
+            </div>
+            <div className="px-4 py-5 sm:p-6 flex">
+              {orderUser && myInfo && (
+                <Invoice order={order} user={orderUser} myInfo={myInfo} />
+              )}
+            </div>
           </div>
-          <div className="flex space-x-4">
-            <button
-              onClick={handleCancelOrder}
-              className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            >
-              Cancel Order
-            </button>
-            <PaymentButtons 
-              order={order} 
-              userId={user?.uid || ''} 
-              userEmail={user?.email || ''}
-              onOrderUpdate={(updatedOrder) => setOrder(updatedOrder)}
-            />
+
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Payment Options</h3>
+            </div>
+            <div className="px-4 py-5 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-gray-900">T/T Payment</h4>
+                  <TTPayment 
+                    order={order} 
+                    userId={user?.uid || ''} 
+                    userEmail={user?.email || ''}
+                    onOrderUpdate={(updatedOrder) => setOrder(updatedOrder)}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-gray-900">Credit Card Payment</h4>
+                  <StripePayment 
+                    order={order} 
+                    userId={user?.uid || ''} 
+                    userEmail={user?.email || ''}
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={handleCancelOrder}
+                  className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancel Order
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

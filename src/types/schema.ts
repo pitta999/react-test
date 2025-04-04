@@ -214,6 +214,16 @@ export interface Order extends BaseDocument {
   paymentMethod?: string;  // 결제 방법
   paymentId?: string;      // 결제 ID (Stripe 등의 외부 결제 시스템)
   shippingCost?: number;   // 배송비
+  ttPayment?: {           // T/T 결제 관련 정보
+    remittanceFiles: {    // 송금증 파일 목록
+      id: string;         // 파일 ID
+      name: string;       // 파일명
+      url: string;        // 파일 URL
+      uploadedAt: string; // 업로드 시간
+    }[];
+    status: 'pending' | 'approved' | 'rejected'; // T/T 결제 상태
+    adminNote?: string;   // 관리자 메모
+  };
 }
 
 // 연관 상품 관계 타입

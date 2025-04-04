@@ -7,7 +7,7 @@ import Loader from 'components/common/Loader';
 import { createCheckoutSession, redirectToCheckout } from 'utils/stripe';
 import { toast } from 'react-toastify';
 import Invoice from './Invoice';
-import PaymentButtons from './PaymentButtons';
+
 
 interface LocationState {
   orderId: string;
@@ -273,12 +273,7 @@ export default function OrderComplete() {
             >
               Cancel Order
             </button>
-            <PaymentButtons 
-              order={order} 
-              userId={order.userId} 
-              userEmail={order.userEmail}
-              onOrderUpdate={(updatedOrder) => setOrder(updatedOrder)}
-            />
+
           </div>
         </div>
       )}
